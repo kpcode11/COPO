@@ -320,9 +320,23 @@ model ProgramSurveyUpload {
 
 model POSurveyAggregate {
   id               String @id @default(cuid())
-  programOutcomeId String
+  programOutcomeId String @unique
   responses        Int
   averageScore     Float
+}
+
+enum SurveyType {
+  COURSE
+  PROGRAM
+}
+
+model SurveyTemplate {
+  id         String     @id @default(cuid())
+  type       SurveyType
+  entityId   String?    // optional courseId or programId when template is specific
+  template   Json
+  createdBy  String
+  createdAt  DateTime   @default(now())
 }
 
 ///////////////////////
