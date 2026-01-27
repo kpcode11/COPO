@@ -185,12 +185,14 @@ model AssessmentQuestion {
 }
 
 model StudentMark {
-  id         String  @id @default(cuid())
-  rollNo     String
-  marks      Float
-  questionId String
+  id            String  @id @default(cuid())
+  rollNo        String
+  marks         Float
+  questionId    String
+  marksUploadId String?
 
-  question   AssessmentQuestion @relation(fields: [questionId], references: [id])
+  question      AssessmentQuestion @relation(fields: [questionId], references: [id])
+  marksUpload   MarksUpload? @relation(fields: [marksUploadId], references: [id])
 }
 
 model MarksUpload {
@@ -202,6 +204,7 @@ model MarksUpload {
   recordCount  Int
 
   assessment   Assessment @relation(fields: [assessmentId], references: [id])
+  studentMarks StudentMark[]
 }
 
 ///////////////////////
