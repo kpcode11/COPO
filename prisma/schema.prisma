@@ -53,10 +53,13 @@ model User {
   password      String
   role          Role
   departmentId  String?
+  isActive      Boolean  @default(true)
+  deletedAt     DateTime?
   createdAt     DateTime @default(now())
 
   department    Department? @relation(fields: [departmentId], references: [id])
   teaching      CourseTeacher[]
+  sessions      Session[]
 }
 
 ///////////////////////
@@ -337,6 +340,20 @@ model GlobalConfig {
   level2Threshold       Float    // 50
   level1Threshold       Float    // 40
   updatedAt             DateTime @updatedAt
+}
+
+///////////////////////
+// SESSIONS
+///////////////////////
+
+model Session {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  userId     String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
 }
 
 ///////////////////////
