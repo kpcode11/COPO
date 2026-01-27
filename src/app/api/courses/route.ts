@@ -26,7 +26,7 @@ export async function GET(req: Request) {
     } else if (me.role === 'TEACHER') {
       // Only courses assigned to teacher
       const assignments = await prisma.courseTeacher.findMany({ where: { teacherId: me.id } })
-      const courseIds = assignments.map(a => a.courseId)
+      const courseIds = assignments.map((a: { courseId: string }) => a.courseId)
       where.id = { in: courseIds }
     }
 

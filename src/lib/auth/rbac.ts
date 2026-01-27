@@ -1,10 +1,10 @@
-import { User } from '@prisma/client'
+type UserLike = { role?: string; departmentId?: string }
 
-export const isAdmin = (user?: Pick<User, 'role'> | null) => user?.role === 'ADMIN'
-export const isHod = (user?: Pick<User, 'role'> | null) => user?.role === 'HOD'
-export const isTeacher = (user?: Pick<User, 'role'> | null) => user?.role === 'TEACHER'
+export const isAdmin = (user?: UserLike | null) => user?.role === 'ADMIN'
+export const isHod = (user?: UserLike | null) => user?.role === 'HOD'
+export const isTeacher = (user?: UserLike | null) => user?.role === 'TEACHER'
 
-export const assertAdmin = (user?: Pick<User, 'role'> | null) => {
+export const assertAdmin = (user?: UserLike | null) => {
   if (!isAdmin(user)) throw new Error('Forbidden: Admins only')
 }
 

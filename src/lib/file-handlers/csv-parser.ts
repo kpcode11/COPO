@@ -10,7 +10,7 @@ export const parseCsvFile = async (file: File) => {
         const headers = results.meta.fields || []
         resolve({ headers, rows: results.data })
       },
-      error: (err) => reject(err),
+      error: (err: unknown) => reject(err),
     })
   })
 }

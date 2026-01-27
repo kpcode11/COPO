@@ -16,9 +16,10 @@ export const validateMarksRows = async (assessmentId: string, headers: string[],
     return { valid: false, errors, preview: [], recordCount: rows.length }
   }
 
-  // Fetch questions for assessment
-  const questions = await prisma.assessmentQuestion.findMany({ where: { assessmentId } })
-  const questionMap = new Map(questions.map(q => [q.questionCode, q]))
+  // Fetch questions for assessment (select minimal fields to ensure types)
+  const questions = await prisma.assessmentQuestion.findMany({ where: { assessmentId }, select: { id: true, questionCode: true, maxMarks: true, courseOutcomeId: true } })
+  type Q = { id: string; questionCode: string; maxMarks: number; courseOutcomeId?: string | null }
+  const questionMap = new Map<string, Q>(questions.map((q: Q) => [q.questionCode, q]))
 
   // Validate header question IDs
   const qHeaders = headers.slice(1)
@@ -34,30 +35,30 @@ export const validateMarksRows = async (assessmentId: string, headers: string[],
   }
 
   // Ensure file contains all question columns defined for the assessment
-  const expectedQuestionCodes = questions.map(q => q.questionCode)
-  const missingHeaders = expectedQuestionCodes.filter(code => !qHeaders.includes(code))
+  const expectedQuestionCodes = questions.map((q: Q) => q.questionCode)
+  const missingHeaders = expectedQuestionCodes.filter((code: string) => !qHeaders.includes(code))
   if (missingHeaders.length > 0) {
     errors.push({ row: 0, column: 'header', message: `Missing question column(s): ${missingHeaders.join(', ')}` })
     return { valid: false, errors, preview: [], recordCount: rows.length }
   }
 
   // Validate mapping: each question must have a courseOutcomeId
-  const unmapped = questions.filter(q => !q.courseOutcomeId).map(q => q.questionCode)
+  const unmapped = questions.filter((q: Q) => !q.courseOutcomeId).map((q: Q) => q.questionCode)
   if (unmapped.length > 0) {
     errors.push({ row: 0, column: 'mapping', message: `Unmapped questions: ${unmapped.join(', ')}` })
     return { valid: false, errors, preview: [], recordCount: rows.length }
   }
 
   // Validate rows
-  rows.forEach((r, idx) => {
+  rows.forEach((r: Record<string, string>, idx: number) => {
     const roll = r[headers[0]]?.toString().trim() || ''
     if (!roll) {
       errors.push({ row: idx + 1, column: headers[0], message: 'Missing RollNo' })
     }
 
-    const previewRow: any = { RollNo: roll }
+    const previewRow: Record<string, string | number> = { RollNo: roll }
 
-    qHeaders.forEach(qh => {
+    qHeaders.forEach((qh: string) => {
       const cell = r[qh]
       if (cell === undefined || cell === null || cell === '') {
         // treat as zero
@@ -68,7 +69,7 @@ export const validateMarksRows = async (assessmentId: string, headers: string[],
           errors.push({ row: idx + 1, column: qh, message: `Non-numeric value for ${qh}` })
           previewRow[qh] = cell
         } else {
-          const q = questionMap.get(qh)!
+          const q = questionMap.get(qh) as Q
           if (val > q.maxMarks) {
             errors.push({ row: idx + 1, column: qh, message: `Marks exceed max (${val} > ${q.maxMarks})` })
           }
