@@ -1,4 +1,4 @@
-type UserLike = { role?: string; departmentId?: string }
+type UserLike = { role?: string; departmentId?: string | null }
 
 export const isAdmin = (user?: UserLike | null) => user?.role === 'ADMIN'
 export const isHod = (user?: UserLike | null) => user?.role === 'HOD'

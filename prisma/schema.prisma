@@ -7,9 +7,287 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-///////////////////////
-// ENUMS
-///////////////////////
+model User {
+  id           String          @id @default(cuid())
+  name         String
+  email        String          @unique
+  password     String
+  role         Role
+  departmentId String?
+  isActive     Boolean         @default(true)
+  deletedAt    DateTime?
+  createdAt    DateTime        @default(now())
+  teaching     CourseTeacher[]
+  sessions     Session[]
+  department   Department?     @relation(fields: [departmentId], references: [id])
+}
+
+model AcademicYear {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  isActive  Boolean    @default(false)
+  semesters Semester[]
+}
+
+model Semester {
+  id             String       @id @default(cuid())
+  number         Int
+  type           SemesterType
+  academicYearId String
+  isLocked       Boolean      @default(false)
+  courses        Course[]
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+}
+
+model Department {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  isFirstYear Boolean   @default(false)
+  courses     Course[]
+  programs    Program[]
+  users       User[]
+}
+
+model Program {
+  id           String           @id @default(cuid())
+  name         String
+  departmentId String
+  courses      Course[]
+  department   Department       @relation(fields: [departmentId], references: [id])
+  outcomes     ProgramOutcome[]
+}
+
+model Course {
+  id            String               @id @default(cuid())
+  code          String
+  name          String
+  semesterId    String
+  departmentId  String
+  programId     String
+  assessments   Assessment[]
+  coPoMappings  CoPoMapping[]
+  department    Department           @relation(fields: [departmentId], references: [id])
+  program       Program              @relation(fields: [programId], references: [id])
+  semester      Semester             @relation(fields: [semesterId], references: [id])
+  outcomes      CourseOutcome[]
+  surveyUploads CourseSurveyUpload[]
+  teachers      CourseTeacher[]
+}
+
+model CourseTeacher {
+  id        String @id @default(cuid())
+  courseId  String
+  teacherId String
+  course    Course @relation(fields: [courseId], references: [id])
+  teacher   User   @relation(fields: [teacherId], references: [id])
+}
+
+model CourseOutcome {
+  id           String               @id @default(cuid())
+  code         String
+  description  String
+  bloomLevel   String
+  courseId     String
+  questions    AssessmentQuestion[]
+  attainment   COAttainment?
+  survey       COSurveyAggregate?
+  cqiActions   CQIAction[]
+  coPoMappings CoPoMapping[]
+  course       Course               @relation(fields: [courseId], references: [id])
+}
+
+model Assessment {
+  id           String               @id @default(cuid())
+  type         AssessmentType
+  totalMarks   Int
+  date         DateTime
+  courseId     String
+  course       Course               @relation(fields: [courseId], references: [id])
+  questions    AssessmentQuestion[]
+  marksUploads MarksUpload[]
+}
+
+model AssessmentQuestion {
+  id              String        @id @default(cuid())
+  questionCode    String
+  maxMarks        Int
+  assessmentId    String
+  courseOutcomeId String
+  assessment      Assessment    @relation(fields: [assessmentId], references: [id])
+  courseOutcome   CourseOutcome @relation(fields: [courseOutcomeId], references: [id])
+  marks           StudentMark[]
+}
+
+model StudentMark {
+  id            String             @id @default(cuid())
+  rollNo        String
+  marks         Float
+  questionId    String
+  marksUploadId String?
+  marksUpload   MarksUpload?       @relation(fields: [marksUploadId], references: [id])
+  question      AssessmentQuestion @relation(fields: [questionId], references: [id])
+}
+
+model MarksUpload {
+  id           String        @id @default(cuid())
+  assessmentId String
+  fileName     String
+  uploadedBy   String
+  uploadedAt   DateTime      @default(now())
+  recordCount  Int
+  assessment   Assessment    @relation(fields: [assessmentId], references: [id])
+  studentMarks StudentMark[]
+}
+
+model COAttainment {
+  id              String          @id @default(cuid())
+  courseOutcomeId String          @unique
+  ia1Level        Float?
+  ia2Level        Float?
+  endSemLevel     Float?
+  directScore     Float
+  indirectScore   Float
+  finalScore      Float
+  level           AttainmentLevel
+  calculatedAt    DateTime        @default(now())
+  courseOutcome   CourseOutcome   @relation(fields: [courseOutcomeId], references: [id])
+}
+
+model COSurveyAggregate {
+  id              String        @id @default(cuid())
+  courseOutcomeId String        @unique
+  responses       Int
+  averageScore    Float
+  courseOutcome   CourseOutcome @relation(fields: [courseOutcomeId], references: [id])
+}
+
+model CourseSurveyUpload {
+  id          String   @id @default(cuid())
+  courseId    String
+  fileName    String
+  uploadedBy  String
+  uploadedAt  DateTime @default(now())
+  recordCount Int
+  course      Course   @relation(fields: [courseId], references: [id])
+}
+
+model CQIAction {
+  id              String        @id @default(cuid())
+  courseOutcomeId String
+  actionTaken     String
+  remarks         String?
+  createdBy       String
+  createdAt       DateTime      @default(now())
+  status          CqiStatus     @default(PENDING)
+  reviewedBy      String?
+  reviewNotes     String?
+  reviewedAt      DateTime?
+  courseOutcome   CourseOutcome @relation(fields: [courseOutcomeId], references: [id])
+}
+
+model ProgramOutcome {
+  id          String        @id @default(cuid())
+  code        String
+  description String
+  programId   String
+  mappings    CoPoMapping[]
+  attainment  POAttainment?
+  program     Program       @relation(fields: [programId], references: [id])
+}
+
+model CoPoMapping {
+  id               String         @id @default(cuid())
+  courseId         String
+  courseOutcomeId  String
+  programOutcomeId String
+  value            Int
+  course           Course         @relation(fields: [courseId], references: [id])
+  courseOutcome    CourseOutcome  @relation(fields: [courseOutcomeId], references: [id])
+  programOutcome   ProgramOutcome @relation(fields: [programOutcomeId], references: [id])
+
+  @@unique([courseOutcomeId, programOutcomeId])
+}
+
+model POAttainment {
+  id               String         @id @default(cuid())
+  programOutcomeId String         @unique
+  directScore      Float
+  indirectScore    Float
+  finalScore       Float
+  calculatedAt     DateTime       @default(now())
+  programOutcome   ProgramOutcome @relation(fields: [programOutcomeId], references: [id])
+}
+
+model ProgramSurveyUpload {
+  id          String   @id @default(cuid())
+  programId   String
+  fileName    String
+  uploadedBy  String
+  uploadedAt  DateTime @default(now())
+  recordCount Int
+}
+
+model POSurveyAggregate {
+  id               String @id @default(cuid())
+  programOutcomeId String @unique
+  responses        Int
+  averageScore     Float
+}
+
+model SurveyTemplate {
+  id        String     @id @default(cuid())
+  type      SurveyType
+  entityId  String?
+  template  Json
+  createdBy String
+  createdAt DateTime   @default(now())
+}
+
+model GlobalConfig {
+  id                   String                @id @default(cuid())
+  coTargetPercent      Float
+  coTargetMarksPercent Float
+  directWeightage      Float
+  indirectWeightage    Float
+  ia1Weightage         Float
+  ia2Weightage         Float
+  endSemWeightage      Float
+  poTargetLevel        Float
+  level3Threshold      Float
+  level2Threshold      Float
+  level1Threshold      Float
+  updatedAt            DateTime              @updatedAt
+  histories            GlobalConfigHistory[]
+}
+
+model GlobalConfigHistory {
+  id             String        @id @default(cuid())
+  globalConfigId String?
+  changedBy      String
+  changes        Json
+  version        Int           @default(1)
+  createdAt      DateTime      @default(now())
+  globalConfig   GlobalConfig? @relation(fields: [globalConfigId], references: [id])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  userId    String
+  details   String?
+  createdAt DateTime @default(now())
+}
 
 enum Role {
   ADMIN
@@ -42,218 +320,6 @@ enum SurveyOption {
   DISAGREE
 }
 
-///////////////////////
-// USERS & ACCESS
-///////////////////////
-
-model User {
-  id            String   @id @default(cuid())
-  name          String
-  email         String   @unique
-  password      String
-  role          Role
-  departmentId  String?
-  isActive      Boolean  @default(true)
-  deletedAt     DateTime?
-  createdAt     DateTime @default(now())
-
-  department    Department? @relation(fields: [departmentId], references: [id])
-  teaching      CourseTeacher[]
-  sessions      Session[]
-}
-
-///////////////////////
-// ACADEMIC STRUCTURE
-///////////////////////
-
-model AcademicYear {
-  id        String   @id @default(cuid())
-  name      String   @unique // 2024-25
-  isActive  Boolean  @default(false)
-
-  semesters Semester[]
-}
-
-model Semester {
-  id             String       @id @default(cuid())
-  number         Int
-  type           SemesterType
-  academicYearId String
-  isLocked       Boolean      @default(false)
-
-  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
-  courses      Course[]
-}
-
-model Department {
-  id           String   @id @default(cuid())
-  name         String   @unique
-  isFirstYear  Boolean  @default(false)
-
-  users        User[]
-  courses      Course[]
-  programs     Program[]
-}
-
-model Program {
-  id           String   @id @default(cuid())
-  name         String
-  departmentId String
-
-  department   Department @relation(fields: [departmentId], references: [id])
-  courses      Course[]
-  outcomes     ProgramOutcome[]
-}
-
-///////////////////////
-// COURSES & TEACHERS
-///////////////////////
-
-model Course {
-  id           String   @id @default(cuid())
-  code         String
-  name         String
-  semesterId   String
-  departmentId String
-  programId    String
-
-  semester     Semester  @relation(fields: [semesterId], references: [id])
-  department   Department @relation(fields: [departmentId], references: [id])
-  program      Program   @relation(fields: [programId], references: [id])
-
-  teachers     CourseTeacher[]
-  outcomes     CourseOutcome[]
-  assessments  Assessment[]
-  coPoMappings CoPoMapping[]
-  surveyUploads CourseSurveyUpload[]
-}
-
-model CourseTeacher {
-  id        String @id @default(cuid())
-  courseId  String
-  teacherId String
-
-  course   Course @relation(fields: [courseId], references: [id])
-  teacher  User   @relation(fields: [teacherId], references: [id])
-}
-
-///////////////////////
-// COURSE OUTCOMES
-///////////////////////
-
-model CourseOutcome {
-  id          String   @id @default(cuid())
-  code        String   // CO1, CO2
-  description String
-  bloomLevel  String
-  courseId    String
-
-  course      Course @relation(fields: [courseId], references: [id])
-  questions   AssessmentQuestion[]
-  attainment  COAttainment?
-  survey      COSurveyAggregate?
-  coPoMappings CoPoMapping[]
-  cqiActions  CQIAction[]
-}
-
-///////////////////////
-// ASSESSMENTS & MARKS
-///////////////////////
-
-model Assessment {
-  id         String         @id @default(cuid())
-  type       AssessmentType
-  totalMarks Int
-  date       DateTime
-  courseId   String
-
-  course     Course @relation(fields: [courseId], references: [id])
-  questions  AssessmentQuestion[]
-  marksUploads MarksUpload[]
-}
-
-model AssessmentQuestion {
-  id           String @id @default(cuid())
-  questionCode String // Q1, Q2
-  maxMarks     Int
-  assessmentId String
-  courseOutcomeId String
-
-  assessment   Assessment   @relation(fields: [assessmentId], references: [id])
-  courseOutcome CourseOutcome @relation(fields: [courseOutcomeId], references: [id])
-  marks        StudentMark[]
-}
-
-model StudentMark {
-  id            String  @id @default(cuid())
-  rollNo        String
-  marks         Float
-  questionId    String
-  marksUploadId String?
-
-  question      AssessmentQuestion @relation(fields: [questionId], references: [id])
-  marksUpload   MarksUpload? @relation(fields: [marksUploadId], references: [id])
-}
-
-model MarksUpload {
-  id           String   @id @default(cuid())
-  assessmentId String
-  fileName     String
-  uploadedBy   String
-  uploadedAt   DateTime @default(now())
-  recordCount  Int
-
-  assessment   Assessment @relation(fields: [assessmentId], references: [id])
-  studentMarks StudentMark[]
-}
-
-///////////////////////
-// CO ATTAINMENT
-///////////////////////
-
-model COAttainment {
-  id              String          @id @default(cuid())
-  courseOutcomeId String          @unique
-  ia1Level        Float?
-  ia2Level        Float?
-  endSemLevel     Float?
-  directScore     Float
-  indirectScore   Float
-  finalScore      Float
-  level           AttainmentLevel
-  calculatedAt    DateTime        @default(now())
-
-  courseOutcome CourseOutcome @relation(fields: [courseOutcomeId], references: [id])
-}
-
-///////////////////////
-// CO SURVEY (AGGREGATED)
-///////////////////////
-
-model COSurveyAggregate {
-  id              String @id @default(cuid())
-  courseOutcomeId String @unique
-  responses       Int
-  averageScore    Float
-
-  courseOutcome CourseOutcome @relation(fields: [courseOutcomeId], references: [id])
-}
-
-model CourseSurveyUpload {
-  id           String   @id @default(cuid())
-  courseId     String
-  fileName     String
-  uploadedBy   String
-  uploadedAt   DateTime @default(now())
-  recordCount  Int
-
-  course       Course @relation(fields: [courseId], references: [id])
-}
-
-///////////////////////
-// CQI ACTIONS
-///////////////////////
-
 enum CqiStatus {
   PENDING
   REVIEWED
@@ -261,151 +327,7 @@ enum CqiStatus {
   REJECTED
 }
 
-model CQIAction {
-  id              String   @id @default(cuid())
-  courseOutcomeId String
-  actionTaken     String
-  remarks         String?
-  createdBy       String
-  createdAt       DateTime @default(now())
-
-  status          CqiStatus @default(PENDING)
-  reviewedBy      String?
-  reviewNotes     String?
-  reviewedAt      DateTime?
-
-  courseOutcome CourseOutcome @relation(fields: [courseOutcomeId], references: [id])
-}
-
-///////////////////////
-// PROGRAM OUTCOMES
-///////////////////////
-
-model ProgramOutcome {
-  id          String @id @default(cuid())
-  code        String // PO1
-  description String
-  programId   String
-
-  program    Program @relation(fields: [programId], references: [id])
-  mappings   CoPoMapping[]
-  attainment POAttainment?
-}
-
-model CoPoMapping {
-  id               String @id @default(cuid())
-  courseId         String
-  courseOutcomeId  String
-  programOutcomeId String
-  value            Int // 0–3
-
-  course         Course         @relation(fields: [courseId], references: [id])
-  courseOutcome  CourseOutcome  @relation(fields: [courseOutcomeId], references: [id])
-  programOutcome ProgramOutcome @relation(fields: [programOutcomeId], references: [id])
-
-  @@unique([courseOutcomeId, programOutcomeId])
-}
-
-///////////////////////
-// PO ATTAINMENT
-///////////////////////
-
-model POAttainment {
-  id               String   @id @default(cuid())
-  programOutcomeId String   @unique
-  directScore      Float
-  indirectScore    Float
-  finalScore       Float
-  calculatedAt     DateTime @default(now())
-
-  programOutcome ProgramOutcome @relation(fields: [programOutcomeId], references: [id])
-}
-
-model ProgramSurveyUpload {
-  id           String   @id @default(cuid())
-  programId    String
-  fileName     String
-  uploadedBy   String
-  uploadedAt   DateTime @default(now())
-  recordCount  Int
-}
-
-model POSurveyAggregate {
-  id               String @id @default(cuid())
-  programOutcomeId String @unique
-  responses        Int
-  averageScore     Float
-}
-
 enum SurveyType {
   COURSE
   PROGRAM
-}
-
-model SurveyTemplate {
-  id         String     @id @default(cuid())
-  type       SurveyType
-  entityId   String?    // optional courseId or programId when template is specific
-  template   Json
-  createdBy  String
-  createdAt  DateTime   @default(now())
-}
-
-///////////////////////
-// GLOBAL CONFIGURATION
-///////////////////////
-
-model GlobalConfig {
-  id                    String   @id @default(cuid())
-  coTargetPercent       Float    // 60 - % of students that must meet target
-  coTargetMarksPercent  Float    // 60 - % of marks student must score
-  directWeightage       Float    // 0.8
-  indirectWeightage     Float    // 0.2
-  ia1Weightage          Float    // 0.2
-  ia2Weightage          Float    // 0.2
-  endSemWeightage       Float    // 0.6
-  poTargetLevel         Float    // 2.5
-  level3Threshold       Float    // 60
-  level2Threshold       Float    // 50
-  level1Threshold       Float    // 40
-  updatedAt             DateTime @updatedAt
-}
-
-model GlobalConfigHistory {
-  id             String   @id @default(cuid())
-  globalConfigId String?
-  changedBy      String
-  changes        Json
-  version        Int      @default(1)
-  createdAt      DateTime @default(now())
-
-  globalConfig GlobalConfig? @relation(fields: [globalConfigId], references: [id])
-}
-
-///////////////////////
-// SESSIONS
-///////////////////////
-
-model Session {
-  id         String   @id @default(cuid())
-  token      String   @unique
-  userId     String
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-
-  user       User     @relation(fields: [userId], references: [id])
-}
-
-///////////////////////
-// AUDIT LOGS
-///////////////////////
-
-model AuditLog {
-  id          String   @id @default(cuid())
-  action      String
-  entity      String
-  entityId    String
-  userId      String
-  details     String?
-  createdAt   DateTime @default(now())
 }
