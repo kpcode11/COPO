@@ -26,9 +26,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
     const updated = await prisma.coPoMapping.update({ where: { id }, data: { value: parsed.value } })
 
-    await createAudit(me.id, 'UPDATE_CO_PO_MAPPING', 'CoPoMapping', id, `Updated mapping value to ${parsed.value}`)
+    const audit = await createAudit(me.id, 'UPDATE_CO_PO_MAPPING', 'CoPoMapping', id, `Updated mapping value to ${parsed.value}`)
 
-    return NextResponse.json({ mapping: updated })
+    return NextResponse.json({ mapping: updated, auditId: audit.id })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })
   }

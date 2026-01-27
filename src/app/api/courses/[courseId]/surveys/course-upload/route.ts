@@ -63,9 +63,9 @@ export async function POST(req: Request, { params }: { params: { courseId: strin
       await prisma.cOSurveyAggregate.upsert({ where: { courseOutcomeId: co.id }, update: { responses, averageScore }, create: { courseOutcomeId: co.id, responses, averageScore } })
     }
 
-    await createAudit(me.id, 'UPLOAD_COURSE_SURVEY', 'CourseSurveyUpload', upload.id, `Uploaded course survey for course ${courseId}`)
+    const audit = await createAudit(me.id, 'UPLOAD_COURSE_SURVEY', 'CourseSurveyUpload', upload.id, `Uploaded course survey for course ${courseId}`)
 
-    return NextResponse.json({ upload })
+    return NextResponse.json({ upload, auditId: audit.id })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })
   }

@@ -83,9 +83,11 @@ export const recalcProgramPO = async (programId: string, semesterId: string, tri
     results.push({ programOutcomeId: po.id, direct, indirect, final, courses: coursePOs })
   }
 
-  if (triggeredBy) {
-    await createAudit(triggeredBy, 'RECALC_PO_ATTAINMENT', 'Program', programId, `Recalculated PO attainment for program ${programId} semester ${semesterId}`)
-  }
+let auditId: string | null = null
+    if (triggeredBy) {
+      const audit = await createAudit(triggeredBy, 'RECALC_PO_ATTAINMENT', 'Program', programId, `Recalculated PO attainment for program ${programId} semester ${semesterId}`)
+      auditId = audit.id
+    }
 
-  return results
+    return { results, auditId }
 }

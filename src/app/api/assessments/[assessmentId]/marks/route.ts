@@ -53,9 +53,9 @@ export async function POST(req: Request, { params }: { params: { assessmentId: s
       }
     }
 
-    await createAudit(me.id, 'UPLOAD_MARKS', 'MarksUpload', upload.id, `Uploaded marks file ${upload.fileName}`)
+    const audit = await createAudit(me.id, 'UPLOAD_MARKS', 'MarksUpload', upload.id, `Uploaded marks file ${upload.fileName}`)
 
-    return NextResponse.json({ upload })
+    return NextResponse.json({ upload, auditId: audit.id })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })
   }

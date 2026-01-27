@@ -22,9 +22,9 @@ export async function POST(req: Request) {
     }
 
     // Ensure CO Attainment exists for required COs inside compute function — recalcProgramPO throws if missing
-    const results = await recalcProgramPO(programId, semesterId, me.id)
+    const { results, auditId } = await recalcProgramPO(programId, semesterId, me.id)
 
-    return NextResponse.json({ results })
+    return NextResponse.json({ results, auditId })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })
   }

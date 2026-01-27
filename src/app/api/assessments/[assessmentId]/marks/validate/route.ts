@@ -39,7 +39,8 @@ export async function POST(req: Request, { params }: { params: { assessmentId: s
     // Validate headers and rows
     const result = await validateMarksRows(assessmentId, headers, rows)
 
-    return NextResponse.json({ validation: result })
+    // Return structured summary required by governance
+    return NextResponse.json({ valid: result.valid, preview: result.preview, recordCount: result.recordCount, summary: result.summary, errors: result.errors })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })
   }

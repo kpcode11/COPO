@@ -30,9 +30,9 @@ export async function POST(req: Request, { params }: { params: { courseId: strin
 
     const mapping = await prisma.coPoMapping.create({ data: { courseId, courseOutcomeId: parsed.courseOutcomeId, programOutcomeId: parsed.programOutcomeId, value: parsed.value } })
 
-    await createAudit(me.id, 'CREATE_CO_PO_MAPPING', 'CoPoMapping', mapping.id, `Created mapping CO:${parsed.courseOutcomeId} -> PO:${parsed.programOutcomeId} value:${parsed.value}`)
+    const audit = await createAudit(me.id, 'CREATE_CO_PO_MAPPING', 'CoPoMapping', mapping.id, `Created mapping CO:${parsed.courseOutcomeId} -> PO:${parsed.programOutcomeId} value:${parsed.value}`)
 
-    return NextResponse.json({ mapping })
+    return NextResponse.json({ mapping, auditId: audit.id })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })
   }

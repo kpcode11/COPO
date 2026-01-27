@@ -49,11 +49,11 @@ export async function PATCH(req: Request) {
     const lastHist = await prisma.globalConfigHistory.findFirst({ orderBy: { createdAt: 'desc' } })
     const version = (lastHist?.version ?? 0) + 1
 
-    await prisma.globalConfigHistory.create({ data: { globalConfigId: newConfig.id, changedBy: me.id, changes, version } })
+    const hist = await prisma.globalConfigHistory.create({ data: { globalConfigId: newConfig.id, changedBy: me.id, changes, version } })
 
-    await createAudit(me.id, 'UPDATE_GLOBAL_CONFIG', 'GlobalConfig', newConfig.id, `Updated global config v${version}`)
+    const audit = await createAudit(me.id, 'UPDATE_GLOBAL_CONFIG', 'GlobalConfig', newConfig.id, `Updated global config v${version}`)
 
-    return NextResponse.json({ config: newConfig })
+    return NextResponse.json({ config: newConfig, auditId: audit.id, historyId: hist.id })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })
   }

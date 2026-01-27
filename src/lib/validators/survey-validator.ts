@@ -18,16 +18,18 @@ export const validateCourseSurveyCsv = async (courseId: string, headers: string[
   if (errors.length > 0) return { valid: false, errors }
 
   // Validate rows: each cell must be one of LIKERT options exactly
+  const invalidOptions: Array<{ row: number; column: string; value: string }> = []
   rows.forEach((r: Record<string, string>, idx: number) => {
     headers.forEach((h: string) => {
       const val = (r[h] || '').toString().trim()
       if (!LIKERT.includes(val as Likert)) {
+        invalidOptions.push({ row: idx + 1, column: h, value: val })
         errors.push(`Row ${idx + 1}, column ${h}: invalid option '${val}'`)
       }
     })
   })
 
-  return { valid: errors.length === 0, errors, recordCount: rows.length }
+  return { valid: errors.length === 0, errors, recordCount: rows.length, invalidOptions }
 }
 
 export const validateProgramSurveyCsv = async (programId: string, headers: string[], rows: Record<string, string>[]) => {
