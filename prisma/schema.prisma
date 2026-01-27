@@ -371,6 +371,17 @@ model GlobalConfig {
   updatedAt             DateTime @updatedAt
 }
 
+model GlobalConfigHistory {
+  id             String   @id @default(cuid())
+  globalConfigId String?
+  changedBy      String
+  changes        Json
+  version        Int      @default(1)
+  createdAt      DateTime @default(now())
+
+  globalConfig GlobalConfig? @relation(fields: [globalConfigId], references: [id])
+}
+
 ///////////////////////
 // SESSIONS
 ///////////////////////
