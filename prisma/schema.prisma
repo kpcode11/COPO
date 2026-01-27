@@ -254,6 +254,13 @@ model CourseSurveyUpload {
 // CQI ACTIONS
 ///////////////////////
 
+enum CqiStatus {
+  PENDING
+  REVIEWED
+  ACCEPTED
+  REJECTED
+}
+
 model CQIAction {
   id              String   @id @default(cuid())
   courseOutcomeId String
@@ -261,6 +268,11 @@ model CQIAction {
   remarks         String?
   createdBy       String
   createdAt       DateTime @default(now())
+
+  status          CqiStatus @default(PENDING)
+  reviewedBy      String?
+  reviewNotes     String?
+  reviewedAt      DateTime?
 
   courseOutcome CourseOutcome @relation(fields: [courseOutcomeId], references: [id])
 }
