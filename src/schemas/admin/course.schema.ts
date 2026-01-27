@@ -1,0 +1,1 @@
+// Admin Zod schemas - Course and teacher management

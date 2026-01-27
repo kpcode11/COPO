@@ -1,0 +1,1 @@
+// Recent activity feed component

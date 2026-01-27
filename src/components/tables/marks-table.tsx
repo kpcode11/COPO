@@ -1,0 +1,1 @@
+// Student marks table component

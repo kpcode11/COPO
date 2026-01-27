@@ -1,0 +1,354 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+///////////////////////
+// ENUMS
+///////////////////////
+
+enum Role {
+  ADMIN
+  HOD
+  TEACHER
+}
+
+enum SemesterType {
+  ODD
+  EVEN
+}
+
+enum AssessmentType {
+  IA1
+  IA2
+  ENDSEM
+}
+
+enum AttainmentLevel {
+  LEVEL_0
+  LEVEL_1
+  LEVEL_2
+  LEVEL_3
+}
+
+enum SurveyOption {
+  STRONGLY_AGREE
+  AGREE
+  NEUTRAL
+  DISAGREE
+}
+
+///////////////////////
+// USERS & ACCESS
+///////////////////////
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  password      String
+  role          Role
+  departmentId  String?
+  createdAt     DateTime @default(now())
+
+  department    Department? @relation(fields: [departmentId], references: [id])
+  teaching      CourseTeacher[]
+}
+
+///////////////////////
+// ACADEMIC STRUCTURE
+///////////////////////
+
+model AcademicYear {
+  id        String   @id @default(cuid())
+  name      String   @unique // 2024-25
+  isActive  Boolean  @default(false)
+
+  semesters Semester[]
+}
+
+model Semester {
+  id             String       @id @default(cuid())
+  number         Int
+  type           SemesterType
+  academicYearId String
+  isLocked       Boolean      @default(false)
+
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+  courses      Course[]
+}
+
+model Department {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  isFirstYear  Boolean  @default(false)
+
+  users        User[]
+  courses      Course[]
+  programs     Program[]
+}
+
+model Program {
+  id           String   @id @default(cuid())
+  name         String
+  departmentId String
+
+  department   Department @relation(fields: [departmentId], references: [id])
+  courses      Course[]
+  outcomes     ProgramOutcome[]
+}
+
+///////////////////////
+// COURSES & TEACHERS
+///////////////////////
+
+model Course {
+  id           String   @id @default(cuid())
+  code         String
+  name         String
+  semesterId   String
+  departmentId String
+  programId    String
+
+  semester     Semester  @relation(fields: [semesterId], references: [id])
+  department   Department @relation(fields: [departmentId], references: [id])
+  program      Program   @relation(fields: [programId], references: [id])
+
+  teachers     CourseTeacher[]
+  outcomes     CourseOutcome[]
+  assessments  Assessment[]
+  coPoMappings CoPoMapping[]
+  surveyUploads CourseSurveyUpload[]
+}
+
+model CourseTeacher {
+  id        String @id @default(cuid())
+  courseId  String
+  teacherId String
+
+  course   Course @relation(fields: [courseId], references: [id])
+  teacher  User   @relation(fields: [teacherId], references: [id])
+}
+
+///////////////////////
+// COURSE OUTCOMES
+///////////////////////
+
+model CourseOutcome {
+  id          String   @id @default(cuid())
+  code        String   // CO1, CO2
+  description String
+  bloomLevel  String
+  courseId    String
+
+  course      Course @relation(fields: [courseId], references: [id])
+  questions   AssessmentQuestion[]
+  attainment  COAttainment?
+  survey      COSurveyAggregate?
+  coPoMappings CoPoMapping[]
+  cqiActions  CQIAction[]
+}
+
+///////////////////////
+// ASSESSMENTS & MARKS
+///////////////////////
+
+model Assessment {
+  id         String         @id @default(cuid())
+  type       AssessmentType
+  totalMarks Int
+  date       DateTime
+  courseId   String
+
+  course     Course @relation(fields: [courseId], references: [id])
+  questions  AssessmentQuestion[]
+  marksUploads MarksUpload[]
+}
+
+model AssessmentQuestion {
+  id           String @id @default(cuid())
+  questionCode String // Q1, Q2
+  maxMarks     Int
+  assessmentId String
+  courseOutcomeId String
+
+  assessment   Assessment   @relation(fields: [assessmentId], references: [id])
+  courseOutcome CourseOutcome @relation(fields: [courseOutcomeId], references: [id])
+  marks        StudentMark[]
+}
+
+model StudentMark {
+  id         String  @id @default(cuid())
+  rollNo     String
+  marks      Float
+  questionId String
+
+  question   AssessmentQuestion @relation(fields: [questionId], references: [id])
+}
+
+model MarksUpload {
+  id           String   @id @default(cuid())
+  assessmentId String
+  fileName     String
+  uploadedBy   String
+  uploadedAt   DateTime @default(now())
+  recordCount  Int
+
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+}
+
+///////////////////////
+// CO ATTAINMENT
+///////////////////////
+
+model COAttainment {
+  id              String          @id @default(cuid())
+  courseOutcomeId String          @unique
+  ia1Level        Float?
+  ia2Level        Float?
+  endSemLevel     Float?
+  directScore     Float
+  indirectScore   Float
+  finalScore      Float
+  level           AttainmentLevel
+  calculatedAt    DateTime        @default(now())
+
+  courseOutcome CourseOutcome @relation(fields: [courseOutcomeId], references: [id])
+}
+
+///////////////////////
+// CO SURVEY (AGGREGATED)
+///////////////////////
+
+model COSurveyAggregate {
+  id              String @id @default(cuid())
+  courseOutcomeId String @unique
+  responses       Int
+  averageScore    Float
+
+  courseOutcome CourseOutcome @relation(fields: [courseOutcomeId], references: [id])
+}
+
+model CourseSurveyUpload {
+  id           String   @id @default(cuid())
+  courseId     String
+  fileName     String
+  uploadedBy   String
+  uploadedAt   DateTime @default(now())
+  recordCount  Int
+
+  course       Course @relation(fields: [courseId], references: [id])
+}
+
+///////////////////////
+// CQI ACTIONS
+///////////////////////
+
+model CQIAction {
+  id              String   @id @default(cuid())
+  courseOutcomeId String
+  actionTaken     String
+  remarks         String?
+  createdBy       String
+  createdAt       DateTime @default(now())
+
+  courseOutcome CourseOutcome @relation(fields: [courseOutcomeId], references: [id])
+}
+
+///////////////////////
+// PROGRAM OUTCOMES
+///////////////////////
+
+model ProgramOutcome {
+  id          String @id @default(cuid())
+  code        String // PO1
+  description String
+  programId   String
+
+  program    Program @relation(fields: [programId], references: [id])
+  mappings   CoPoMapping[]
+  attainment POAttainment?
+}
+
+model CoPoMapping {
+  id               String @id @default(cuid())
+  courseId         String
+  courseOutcomeId  String
+  programOutcomeId String
+  value            Int // 0–3
+
+  course         Course         @relation(fields: [courseId], references: [id])
+  courseOutcome  CourseOutcome  @relation(fields: [courseOutcomeId], references: [id])
+  programOutcome ProgramOutcome @relation(fields: [programOutcomeId], references: [id])
+
+  @@unique([courseOutcomeId, programOutcomeId])
+}
+
+///////////////////////
+// PO ATTAINMENT
+///////////////////////
+
+model POAttainment {
+  id               String   @id @default(cuid())
+  programOutcomeId String   @unique
+  directScore      Float
+  indirectScore    Float
+  finalScore       Float
+  calculatedAt     DateTime @default(now())
+
+  programOutcome ProgramOutcome @relation(fields: [programOutcomeId], references: [id])
+}
+
+model ProgramSurveyUpload {
+  id           String   @id @default(cuid())
+  programId    String
+  fileName     String
+  uploadedBy   String
+  uploadedAt   DateTime @default(now())
+  recordCount  Int
+}
+
+model POSurveyAggregate {
+  id               String @id @default(cuid())
+  programOutcomeId String
+  responses        Int
+  averageScore     Float
+}
+
+///////////////////////
+// GLOBAL CONFIGURATION
+///////////////////////
+
+model GlobalConfig {
+  id                    String   @id @default(cuid())
+  coTargetPercent       Float    // 60 - % of students that must meet target
+  coTargetMarksPercent  Float    // 60 - % of marks student must score
+  directWeightage       Float    // 0.8
+  indirectWeightage     Float    // 0.2
+  ia1Weightage          Float    // 0.2
+  ia2Weightage          Float    // 0.2
+  endSemWeightage       Float    // 0.6
+  poTargetLevel         Float    // 2.5
+  level3Threshold       Float    // 60
+  level2Threshold       Float    // 50
+  level1Threshold       Float    // 40
+  updatedAt             DateTime @updatedAt
+}
+
+///////////////////////
+// AUDIT LOGS
+///////////////////////
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  entity      String
+  entityId    String
+  userId      String
+  details     String?
+  createdAt   DateTime @default(now())
+}

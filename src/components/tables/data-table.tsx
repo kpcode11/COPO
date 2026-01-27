@@ -1,0 +1,1 @@
+// Generic data table component
