@@ -11,12 +11,14 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
   const [openCreate, setOpenCreate] = useState(false)
   const [creating, setCreating] = useState(false)
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'TEACHER' })
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'TEACHER', departmentId: '' })
   const [error, setError] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [toDelete, setToDelete] = useState<string | null>(null)
   const [editOpen, setEditOpen] = useState(false)
   const [editing, setEditing] = useState<any | null>(null)
+
+  const [departments, setDepartments] = useState<any[]>([])
 
   const fetchUsers = async () => {
     setLoading(true)
@@ -32,7 +34,15 @@ export default function AdminUsersPage() {
     }
   }
 
-  useEffect(() => { fetchUsers() }, [])
+  const fetchDepartments = async () => {
+    try {
+      const res = await fetch('/api/departments')
+      const data = await res.json()
+      if (res.ok && data.departments) setDepartments(data.departments)
+    } catch (err) { /* ignore */ }
+  }
+
+  useEffect(() => { fetchUsers(); fetchDepartments() }, [])
 
   const createUser = async () => {
     setCreating(true)
@@ -42,7 +52,7 @@ export default function AdminUsersPage() {
       const data = await res.json()
       if (!res.ok) return setError(data.error || 'Create failed')
       setOpenCreate(false)
-      setForm({ name: '', email: '', password: '', role: 'TEACHER' })
+      setForm({ name: '', email: '', password: '', role: 'TEACHER', departmentId: '' })
       fetchUsers()
     } catch (err: any) {
       setError(err.message || 'Network error')
@@ -105,6 +115,21 @@ export default function AdminUsersPage() {
             <Input label="Name" value={form.name} onChange={(v) => setForm((s) => ({ ...s, name: v }))} required />
             <Input label="Email" value={form.email} onChange={(v) => setForm((s) => ({ ...s, email: v }))} required />
             <Input label="Password" type="password" value={form.password} onChange={(v) => setForm((s) => ({ ...s, password: v }))} required />
+            <div className="mt-2">
+              <label className="block text-sm mb-1">Role</label>
+              <select value={form.role} onChange={(e) => setForm((s) => ({ ...s, role: e.target.value }))} className="w-full border p-2 rounded">
+                <option value="ADMIN">ADMIN</option>
+                <option value="HOD">HOD</option>
+                <option value="TEACHER">TEACHER</option>
+              </select>
+            </div>
+            <div className="mt-2">
+              <label className="block text-sm mb-1">Department</label>
+              <select value={form.departmentId} onChange={(e) => setForm((s) => ({ ...s, departmentId: e.target.value }))} className="w-full border p-2 rounded">
+                <option value="">(none)</option>
+                {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </div>
             <div className="mt-4 flex justify-end gap-2">
               <Button variant="secondary" onClick={() => setOpenCreate(false)}>Cancel</Button>
               <Button variant="primary" onClick={() => createUser()} disabled={creating}>{creating ? 'Creating...' : 'Create'}</Button>

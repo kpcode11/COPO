@@ -39,9 +39,19 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   try {
     const me = await getCurrentUser(req)
-    if (!me || me.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!me) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const users = await prisma.user.findMany({ where: { deletedAt: null }, select: { id: true, name: true, email: true, role: true, departmentId: true, createdAt: true, isActive: true } })
+    const url = new URL(req.url)
+    const roleFilter = url.searchParams.get('role')
+
+    // Admin can view all; HOD can view users in their department
+    const whereAny: any = { deletedAt: null }
+    if (me.role === 'HOD') whereAny.departmentId = me.departmentId
+    if (roleFilter) whereAny.role = roleFilter
+
+    if (me.role !== 'ADMIN' && me.role !== 'HOD') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    const users = await prisma.user.findMany({ where: whereAny, select: { id: true, name: true, email: true, role: true, departmentId: true, createdAt: true, isActive: true } })
     return NextResponse.json({ users })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })
