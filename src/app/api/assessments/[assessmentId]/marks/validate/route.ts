@@ -5,8 +5,11 @@ import { parseCsvFile } from '@/lib/file-handlers/csv-parser'
 import { parseExcelFile } from '@/lib/file-handlers/excel-parser'
 import { validateMarksRows } from '@/lib/validators/marks-validator'
 
-export async function POST(req: Request, { params }: { params: { assessmentId: string } }) {
+export async function POST(req: Request, context: any) {
   try {
+    const ctx: any = context;
+    let params = ctx.params;
+    if (params instanceof Promise) params = await params;
     const me = await getCurrentUser(req)
     if (!me) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (me.role !== 'TEACHER') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

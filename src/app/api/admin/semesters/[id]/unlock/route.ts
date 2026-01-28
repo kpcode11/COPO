@@ -4,8 +4,11 @@ import { isAdmin } from '@/lib/auth/rbac'
 import { prisma } from '@/lib/db/prisma'
 import { createAudit } from '@/lib/db/audit'
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, context: any) {
   try {
+    const ctx: any = context;
+    let params = ctx.params;
+    if (params instanceof Promise) params = await params;
     const me = await getCurrentUser(req)
     if (!me) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (!isAdmin(me)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

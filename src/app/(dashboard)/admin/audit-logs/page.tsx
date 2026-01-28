@@ -1,1 +1,5 @@
-// Audit logs - View all system audit logs with filters
+import React from 'react';
+
+export default function AuditLogsPage() {
+  return <div>Audit Logs (placeholder)</div>;
+}

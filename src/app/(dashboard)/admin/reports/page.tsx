@@ -1,1 +1,5 @@
-// Reports overview - Links to various report types
+import React from 'react';
+
+export default function AdminReportsPage() {
+  return <div>Admin Reports (placeholder)</div>;
+}

@@ -8,8 +8,9 @@ import { createAudit } from '@/lib/db/audit'
 
 const LIKERT_MAP: Record<string, number> = { STRONGLY_AGREE: 3, AGREE: 2, NEUTRAL: 1, DISAGREE: 0 }
 
-export async function POST(req: Request, { params }: { params: { programId: string } }) {
+export async function POST(req: Request, context: any) {
   try {
+    const { params } = context as any;
     const me = await getCurrentUser(req)
     if (!me) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

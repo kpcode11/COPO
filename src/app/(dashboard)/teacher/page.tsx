@@ -1,1 +1,5 @@
-// Teacher dashboard home - Assigned courses, pending tasks
+import React from 'react';
+
+export default function TeacherPage() {
+  return <div>Teacher Dashboard (placeholder)</div>;
+}

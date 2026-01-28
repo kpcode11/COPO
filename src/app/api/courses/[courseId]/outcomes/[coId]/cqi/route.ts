@@ -4,8 +4,9 @@ import { prisma } from '@/lib/db/prisma'
 import { createCqiSchema } from '@/schemas/teacher/cqi.schema'
 import { createAudit } from '@/lib/db/audit'
 
-export async function POST(req: Request, { params }: { params: { courseId: string; coId: string } }) {
+export async function POST(req: Request, context: any) {
   try {
+    const { params } = context as any;
     const me = await getCurrentUser(req)
     if (!me) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (me.role !== 'TEACHER') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

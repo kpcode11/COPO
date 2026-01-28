@@ -1,1 +1,5 @@
-// Question-CO mapping - Map questions to course outcomes
+import React from 'react';
+
+export default function AssessmentQuestionsPage() {
+  return <div>Assessment Questions (placeholder)</div>;
+}

@@ -4,8 +4,9 @@ import { getCurrentUser } from '@/lib/auth/get-current-user'
 import { updateMappingSchema } from '@/schemas/teacher/mapping.schema'
 import { createAudit } from '@/lib/db/audit'
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, context: any) {
   try {
+    const { params } = context as any;
     const me = await getCurrentUser(req)
     if (!me) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

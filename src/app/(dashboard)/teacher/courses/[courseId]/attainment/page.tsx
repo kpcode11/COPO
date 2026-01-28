@@ -1,1 +1,5 @@
-// Course attainment view - Calculated CO attainment results
+import React from 'react';
+
+export default function CourseAttainmentPage() {
+  return <div>Course Attainment (placeholder)</div>;
+}

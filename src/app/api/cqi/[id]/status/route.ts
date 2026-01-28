@@ -5,8 +5,9 @@ import { updateCqiStatusSchema } from '@/schemas/teacher/cqi.schema'
 import { isHod, isAdmin } from '@/lib/auth/rbac'
 import { createAudit } from '@/lib/db/audit'
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, context: any) {
   try {
+    const { params } = context as any;
     const me = await getCurrentUser(req)
     if (!me) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

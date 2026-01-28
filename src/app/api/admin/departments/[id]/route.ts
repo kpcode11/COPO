@@ -4,8 +4,11 @@ import { getCurrentUser } from '@/lib/auth/get-current-user'
 import { updateDepartmentSchema } from '@/schemas/admin/department.schema'
 import { createAudit } from '@/lib/db/audit'
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, context: any) {
   try {
+    const ctx: any = context;
+    let params = ctx.params;
+    if (params instanceof Promise) params = await params;
     const me = await getCurrentUser(req)
     if (!me || me.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 

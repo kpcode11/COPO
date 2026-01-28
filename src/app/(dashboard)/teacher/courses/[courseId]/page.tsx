@@ -1,1 +1,5 @@
-// Course detail page - Overview of specific course
+import React from 'react';
+
+export default function CoursePage() {
+  return <div>Course Detail (placeholder)</div>;
+}

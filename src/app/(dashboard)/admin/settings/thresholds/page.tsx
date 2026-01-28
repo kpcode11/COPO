@@ -1,1 +1,5 @@
-// Attainment thresholds - Level 0-3 percentage thresholds
+import React from 'react';
+
+export default function ThresholdsPage() {
+  return <div>Thresholds (placeholder)</div>;
+}

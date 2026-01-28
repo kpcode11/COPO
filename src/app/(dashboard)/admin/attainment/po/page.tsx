@@ -1,1 +1,5 @@
-// PO Attainment view - Institution-wide PO attainment status
+import React from 'react';
+
+export default function AdminPoAttainmentPage() {
+  return <div>Admin PO Attainment (placeholder)</div>;
+}

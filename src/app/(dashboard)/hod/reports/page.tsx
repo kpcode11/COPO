@@ -1,1 +1,5 @@
-// HOD reports - Department-level attainment reports
+import React from 'react';
+
+export default function HodReportsPage() {
+  return <div>HOD Reports (placeholder)</div>;
+}

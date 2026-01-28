@@ -4,8 +4,11 @@ import { getCurrentUser } from '@/lib/auth/get-current-user'
 import { assignTeacherSchema } from '@/schemas/admin/assign-teacher.schema'
 import { createAudit } from '@/lib/db/audit'
 
-export async function POST(req: Request, { params }: { params: { courseId: string } }) {
+export async function POST(req: Request, context: any) {
   try {
+    const ctx: any = context;
+    let params = ctx.params;
+    if (params instanceof Promise) params = await params;
     const me = await getCurrentUser(req)
     if (!me || (me.role !== 'ADMIN' && me.role !== 'HOD')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 

@@ -4,8 +4,9 @@ import { isAdmin, isHod } from '@/lib/auth/rbac'
 import { getDepartmentSummary } from '@/lib/reports'
 import { prisma } from '@/lib/db/prisma'
 
-export async function GET(req: Request, { params }: { params: { deptId: string } }) {
+export async function GET(req: Request, context: any) {
   try {
+    const { params } = context as any;
     const me = await getCurrentUser(req)
     if (!me) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

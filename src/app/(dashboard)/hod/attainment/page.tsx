@@ -1,1 +1,5 @@
-// HOD attainment overview - Department CO/PO status
+import React from 'react';
+
+export default function HodAttainmentPage() {
+  return <div>HOD Attainment (placeholder)</div>;
+}

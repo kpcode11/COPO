@@ -4,8 +4,9 @@ import { getCurrentUser } from '@/lib/auth/get-current-user'
 import { isAdmin, isHod } from '@/lib/auth/rbac'
 import { computeCourseLevelPO } from '@/lib/attainment-engine/po-calculator'
 
-export async function GET(req: Request, { params }: { params: { programId: string } }) {
+export async function GET(req: Request, context: any) {
   try {
+    const { params } = context as any;
     const me = await getCurrentUser(req)
     if (!me) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

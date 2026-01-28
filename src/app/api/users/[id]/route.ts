@@ -5,8 +5,9 @@ import { updateUserSchema } from '@/schemas/common/user.schema'
 import { verifyPassword, hashPassword } from '@/lib/auth/password'
 import { createAudit } from '@/lib/db/audit'
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, context: any) {
   try {
+    const { params } = context as any;
     const me = await getCurrentUser(req)
     if (!me) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -29,8 +30,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, context: any) {
   try {
+    const { params } = context as any;
     const me = await getCurrentUser(req)
     if (!me) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -78,8 +80,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, context: any) {
   try {
+    const { params } = context as any;
     const me = await getCurrentUser(req)
     if (!me || me.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 

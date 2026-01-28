@@ -1,1 +1,5 @@
-// Program Exit Survey management - Template config, CSV upload
+import React from 'react';
+
+export default function ProgramExitSurveyPage() {
+  return <div>Program Exit Surveys (placeholder)</div>;
+}

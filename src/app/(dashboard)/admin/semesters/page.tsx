@@ -1,1 +1,5 @@
-// Semesters management - Create odd/even semesters, lock/unlock
+import React from 'react';
+
+export default function AdminSemestersPage() {
+  return <div>Admin Semesters (placeholder)</div>;
+}

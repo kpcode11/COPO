@@ -1,1 +1,5 @@
-// Departments list - CRUD for departments including First Year
+import React from 'react';
+
+export default function AdminDepartmentsPage() {
+  return <div>Admin Departments (placeholder)</div>;
+}

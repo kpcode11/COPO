@@ -1,1 +1,5 @@
-// Course outcomes management - Define CO1, CO2, etc. with Bloom levels
+import React from 'react';
+
+export default function CourseOutcomesPage() {
+  return <div>Course Outcomes (placeholder)</div>;
+}

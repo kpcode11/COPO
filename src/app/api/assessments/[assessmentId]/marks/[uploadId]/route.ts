@@ -3,8 +3,11 @@ import { prisma } from '@/lib/db/prisma'
 import { getCurrentUser } from '@/lib/auth/get-current-user'
 import { createAudit } from '@/lib/db/audit'
 
-export async function DELETE(req: Request, { params }: { params: { assessmentId: string, uploadId: string } }) {
+export async function DELETE(req: Request, context: any) {
   try {
+    const ctx: any = context;
+    let params = ctx.params;
+    if (params instanceof Promise) params = await params;
     const me = await getCurrentUser(req)
     if (!me || (me.role !== 'ADMIN' && me.role !== 'HOD')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 

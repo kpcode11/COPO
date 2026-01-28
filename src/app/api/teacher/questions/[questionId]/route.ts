@@ -4,8 +4,9 @@ import { getCurrentUser } from '@/lib/auth/get-current-user'
 import { updateQuestionSchema } from '@/schemas/teacher/assessment.schema'
 import { createAudit } from '@/lib/db/audit'
 
-export async function PATCH(req: Request, { params }: { params: { questionId: string } }) {
+export async function PATCH(req: Request, context: any) {
   try {
+    const { params } = context as any;
     const me = await getCurrentUser(req)
     if (!me) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (me.role !== 'TEACHER') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

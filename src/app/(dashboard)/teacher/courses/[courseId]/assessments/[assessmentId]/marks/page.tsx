@@ -1,1 +1,5 @@
-// Marks upload - CSV/Excel upload with validation preview
+import React from 'react';
+
+export default function AssessmentMarksPage() {
+  return <div>Assessment Marks (placeholder)</div>;
+}

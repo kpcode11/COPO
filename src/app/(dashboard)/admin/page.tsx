@@ -1,1 +1,5 @@
-// Admin dashboard home - Overview stats, alerts, quick actions
+import React from 'react';
+
+export default function AdminPage() {
+  return <div>Admin Dashboard (placeholder)</div>;
+}

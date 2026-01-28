@@ -1,1 +1,5 @@
-// HOD PO attainment - Department-level PO attainment view
+import React from 'react';
+
+export default function HodPoAttainmentPage() {
+  return <div>HOD PO Attainment (placeholder)</div>;
+}

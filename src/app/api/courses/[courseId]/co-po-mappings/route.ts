@@ -4,8 +4,9 @@ import { getCurrentUser } from '@/lib/auth/get-current-user'
 import { createMappingSchema } from '@/schemas/teacher/mapping.schema'
 import { createAudit } from '@/lib/db/audit'
 
-export async function POST(req: Request, { params }: { params: { courseId: string } }) {
+export async function POST(req: Request, context: any) {
   try {
+    const { params } = context as any;
     const me = await getCurrentUser(req)
     if (!me) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (me.role !== 'TEACHER') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -38,8 +39,9 @@ export async function POST(req: Request, { params }: { params: { courseId: strin
   }
 }
 
-export async function GET(req: Request, { params }: { params: { courseId: string } }) {
+export async function GET(req: Request, context: any) {
   try {
+    const { params } = context as any;
     const { courseId } = params
     const mappings = await prisma.coPoMapping.findMany({ where: { courseId }, include: { courseOutcome: true, programOutcome: true } })
     return NextResponse.json({ mappings })

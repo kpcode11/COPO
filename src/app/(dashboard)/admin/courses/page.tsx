@@ -1,1 +1,5 @@
-// Courses list - View all courses, assign to departments/programs
+import React from 'react';
+
+export default function AdminCoursesPage() {
+  return <div>Admin Courses (placeholder)</div>;
+}

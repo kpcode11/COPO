@@ -1,1 +1,5 @@
-// Programs list - CRUD for programs (B.Tech IT, CSE, etc.)
+import React from 'react';
+
+export default function AdminProgramsPage() {
+  return <div>Admin Programs (placeholder)</div>;
+}
