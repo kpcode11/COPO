@@ -70,6 +70,10 @@ export async function PATCH(req: Request, context: any) {
     if (parsed.name) updateData.name = parsed.name
     if (parsed.email) updateData.email = parsed.email
     if (parsed.departmentId && me.role === 'ADMIN') updateData.departmentId = parsed.departmentId
+    if (parsed.role && me.role === 'ADMIN') {
+      updateData.role = parsed.role
+      await createAudit(me.id, 'UPDATE_USER_ROLE', 'User', id, `Changed role to ${parsed.role}`)
+    }
 
     await prisma.user.update({ where: { id }, data: updateData })
     await createAudit(me.id, 'UPDATE_USER', 'User', id, 'User profile updated')

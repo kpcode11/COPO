@@ -1,10 +1,13 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import useSession from '@/hooks/useSession'
+import Input from '@/components/ui/input'
+import Button from '@/components/ui/button'
+import Alert from '@/components/ui/alert'
 
 export default function ChangePasswordPage() {
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const { user, loading } = useSession()
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -12,18 +15,25 @@ export default function ChangePasswordPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const router = useRouter()
 
-  useEffect(() => {
-    let mounted = true
-    fetch('/api/auth/session').then((r) => r.json()).then((d) => { if (mounted) setUser(d.user) }).catch(console.error).finally(() => mounted && setLoading(false))
-    return () => { mounted = false }
-  }, [])
+  if (loading) return <div className="p-8">Loading...</div>
+  if (!user) {
+    router.replace('/session-expired')
+    return null
+  }
+
+  const validate = () => {
+    if (!currentPassword) return 'Current password is required'
+    if (!newPassword || newPassword.length < 6) return 'New password should be at least 6 characters'
+    if (newPassword !== confirm) return 'Passwords do not match'
+    return null
+  }
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setSuccess(null)
-    if (!user) return setError('Not signed in')
-    if (newPassword !== confirm) return setError('Passwords do not match')
+    const clientErr = validate()
+    if (clientErr) return setError(clientErr)
 
     try {
       const res = await fetch(`/api/users/${user.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currentPassword, newPassword }) })
@@ -36,28 +46,18 @@ export default function ChangePasswordPage() {
     }
   }
 
-  if (loading) return <div className="p-8">Loading...</div>
-  if (!user) return <div className="p-8">Not signed in. <a href="/login" className="text-blue-600">Login</a></div>
-
   return (
     <div className="p-8 max-w-md">
       <h1 className="text-xl font-semibold mb-4">Change password</h1>
+      {error && <Alert type="error">{error}</Alert>}
+      {success && <Alert type="success">{success}</Alert>}
       <form onSubmit={submit}>
-        <div className="mb-3">
-          <label className="block text-sm mb-1">Current password</label>
-          <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} className="w-full border rounded px-3 py-2" required />
+        <Input label="Current password" type="password" value={currentPassword} onChange={setCurrentPassword} required />
+        <Input label="New password" type="password" value={newPassword} onChange={setNewPassword} required />
+        <Input label="Confirm new password" type="password" value={confirm} onChange={setConfirm} required />
+        <div className="mt-4">
+          <Button type="submit" variant="primary">Change password</Button>
         </div>
-        <div className="mb-3">
-          <label className="block text-sm mb-1">New password</label>
-          <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full border rounded px-3 py-2" required />
-        </div>
-        <div className="mb-3">
-          <label className="block text-sm mb-1">Confirm new password</label>
-          <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} className="w-full border rounded px-3 py-2" required />
-        </div>
-        {error && <div className="text-red-600 mb-2">{error}</div>}
-        {success && <div className="text-green-600 mb-2">{success}</div>}
-        <button className="bg-blue-600 text-white px-4 py-2 rounded">Change password</button>
       </form>
     </div>
   )
