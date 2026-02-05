@@ -5,9 +5,21 @@
  * - Keep secrets in environment variables (DATABASE_URL, DATABASE_SHADOW_URL).
  */
 
-export default {
-  migrate: {
-    url: process.env.DATABASE_URL,
-    shadowUrl: process.env.DATABASE_SHADOW_URL,
+// export default {
+//   migrate: {
+//     url: process.env.DATABASE_URL,
+//     shadowUrl: process.env.DATABASE_SHADOW_URL,
+//   },
+// };
+import "dotenv/config";
+import { defineConfig } from "prisma/config";
+
+export default defineConfig({
+  schema: "prisma/schema.prisma",
+  migrations: {
+    path: "prisma/migrations",
   },
-};
+  datasource: {
+    url: process.env["DATABASE_URL"],
+  },
+});
