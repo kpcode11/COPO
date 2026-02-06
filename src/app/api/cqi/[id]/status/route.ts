@@ -7,7 +7,9 @@ import { createAudit } from '@/lib/db/audit'
 
 export async function PATCH(req: Request, context: any) {
   try {
-    const { params } = context as any;
+    const ctx: any = context;
+    let params = ctx.params;
+    if (params instanceof Promise) params = await params;
     const me = await getCurrentUser(req)
     if (!me) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

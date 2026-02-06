@@ -2,6 +2,7 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { Mock } from 'vitest'
 import LoginForm from './LoginForm' 
 
 // Mock next/navigation useRouter for tests
@@ -13,7 +14,7 @@ beforeEach(() => {
 })
 
 test('LoginForm shows validation errors and does not call fetch', async () => {
-  const mockFetch = global.fetch as unknown as vi.Mock
+  const mockFetch = global.fetch as unknown as Mock
   render(<LoginForm />)
   await userEvent.click(screen.getByRole('button', { name: /login/i }))
   // Should show client validation

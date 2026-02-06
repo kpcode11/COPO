@@ -63,8 +63,11 @@ export async function GET(req: Request) {
     }
 
     doc.end()
-    const pdfBuffer = Buffer.concat(chunks)
-    return new NextResponse(pdfBuffer, { status: 200, headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="report.pdf"` } })
+    const pdfBuffer = await new Promise<Buffer>((resolve) => {
+      doc.on('end', () => resolve(Buffer.concat(chunks)))
+    })
+    const arrayBuffer = new Uint8Array(pdfBuffer)
+    return new NextResponse(arrayBuffer, { status: 200, headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="report.pdf"` } })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })
   }

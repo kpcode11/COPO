@@ -21,7 +21,7 @@
         "name": "next"
       }
     ],
-    "types": ["vitest", "node"],
+    "types": ["vitest/globals", "vitest", "node"],
     "paths": {
       "@/*": [
         "./src/*"
@@ -61,9 +61,6 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "src/test"
+    "node_modules"
   ]
 }
