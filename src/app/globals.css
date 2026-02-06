@@ -1,10 +1,5 @@
-/* Tailwind CSS globals */
-
-/* Use Tailwind v4 preflight and utilities */
-@import "tailwindcss/preflight";
-@tailwind utilities;
-
-/* tailwindcss-animate is registered in `tailwind.config.js` */
+/* Tailwind CSS v4 */
+@import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
 
