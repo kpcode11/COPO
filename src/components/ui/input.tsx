@@ -13,7 +13,9 @@ type Props = {
 }
 
 export default function Input({ id, label, type = 'text', value = '', placeholder, error = null, required = false, onChange }: Props) {
-  const inputId = id || `input-${Math.random().toString(36).slice(2, 8)}`
+  // Use React's useId to generate a stable id that matches between server and client
+  const reactId = React.useId()
+  const inputId = id || `input-${reactId.replaceAll(':','')}`
 
   return (
     <div className="mb-4">

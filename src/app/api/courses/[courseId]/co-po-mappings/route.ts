@@ -6,7 +6,9 @@ import { createAudit } from '@/lib/db/audit'
 
 export async function POST(req: Request, context: any) {
   try {
-    const { params } = context as any;
+    const ctx: any = context;
+    let params = ctx.params;
+    if (params instanceof Promise) params = await params;
     const me = await getCurrentUser(req)
     if (!me) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (me.role !== 'TEACHER') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -41,7 +43,9 @@ export async function POST(req: Request, context: any) {
 
 export async function GET(req: Request, context: any) {
   try {
-    const { params } = context as any;
+    const ctx: any = context;
+    let params = ctx.params;
+    if (params instanceof Promise) params = await params;
     const { courseId } = params
     const mappings = await prisma.coPoMapping.findMany({ where: { courseId }, include: { courseOutcome: true, programOutcome: true } })
     return NextResponse.json({ mappings })

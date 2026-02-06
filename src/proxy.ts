@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   // Minimal auth guard for dashboard pages: ensure a session cookie exists.
   // Detailed role checks are performed server-side in API handlers and page components to avoid
   // calling Prisma or other Node-only libraries from the Edge middleware runtime.

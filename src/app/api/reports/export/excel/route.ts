@@ -54,8 +54,9 @@ export async function GET(req: Request) {
     }
 
     const xlsxBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' })
+    const arrayBuffer = new Uint8Array(xlsxBuffer)
 
-    return new NextResponse(xlsxBuffer, { status: 200, headers: { 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Content-Disposition': `attachment; filename="report.xlsx"` } })
+    return new NextResponse(arrayBuffer, { status: 200, headers: { 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Content-Disposition': `attachment; filename="report.xlsx"` } })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })
   }

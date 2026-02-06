@@ -2,7 +2,7 @@
 import React from 'react'
 
 type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline'
 }
 
 export default function Button({ children, variant = 'primary', className = '', ...rest }: Props) {
@@ -11,7 +11,8 @@ export default function Button({ children, variant = 'primary', className = '', 
     primary: 'bg-blue-600 text-white hover:bg-blue-700',
     secondary: 'bg-gray-100 text-gray-800 hover:bg-gray-200',
     danger: 'bg-red-600 text-white hover:bg-red-700',
-    ghost: 'bg-transparent text-blue-600'
+    ghost: 'bg-transparent text-blue-600',
+    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
   }
   return (
     <button className={`${base} ${variants[variant]} ${className}`} {...rest}>

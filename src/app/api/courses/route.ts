@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     const parsed = listCoursesQuerySchema.parse(query)
 
     const where: any = {}
-    if (parsed.academicYearId) where.semester = { some: { academicYearId: parsed.academicYearId } }
+    if (parsed.academicYearId) where.semester = { academicYearId: parsed.academicYearId }
     if (parsed.semesterId) where.semesterId = parsed.semesterId
     if (parsed.departmentId) where.departmentId = parsed.departmentId
     if (parsed.programId) where.programId = parsed.programId
