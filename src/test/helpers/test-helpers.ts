@@ -151,8 +151,8 @@ export function jsonRequest(
   })
 }
 
-export function mockContext(params: Record<string, string>) {
-  return { params: Promise.resolve(params) }
+export function mockContext<T extends Record<string, string>>(params: T) {
+  return { params: Promise.resolve(params) } as { params: Promise<T> }
 }
 
 export async function getJson(res: Response) {
