@@ -78,6 +78,13 @@ export async function PATCH(req: Request, context: any) {
       updateData.role = parsed.role
       await createAudit(me.id, 'UPDATE_USER_ROLE', 'User', id, `Changed role to ${parsed.role}`)
     }
+    if (parsed.isActive !== undefined && me.role === 'ADMIN') {
+      updateData.isActive = parsed.isActive
+      if (parsed.isActive) {
+        updateData.deletedAt = null
+        await createAudit(me.id, 'REACTIVATE_USER', 'User', id, 'User reactivated')
+      }
+    }
 
     await prisma.user.update({ where: { id }, data: updateData })
     await createAudit(me.id, 'UPDATE_USER', 'User', id, 'User profile updated')

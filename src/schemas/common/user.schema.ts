@@ -15,5 +15,6 @@ export const updateUserSchema = z.object({
   newPassword: z.string().min(6).optional(),
   departmentId: z.string().optional(),
   role: z.enum(['ADMIN', 'HOD', 'TEACHER']).optional(),
+  isActive: z.boolean().optional(),
 })
 
