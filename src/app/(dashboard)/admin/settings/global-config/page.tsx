@@ -1,5 +1,5 @@
-import React from 'react';
+import { redirect } from 'next/navigation'
 
 export default function GlobalConfigPage() {
-  return <div>Global Config (placeholder)</div>;
+  redirect('/admin/settings')
 }

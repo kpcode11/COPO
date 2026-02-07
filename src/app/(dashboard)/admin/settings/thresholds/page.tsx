@@ -1,5 +1,5 @@
-import React from 'react';
+import { redirect } from 'next/navigation'
 
 export default function ThresholdsPage() {
-  return <div>Thresholds (placeholder)</div>;
+  redirect('/admin/settings')
 }
