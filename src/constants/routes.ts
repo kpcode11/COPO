@@ -2,54 +2,52 @@
 
 export const PUBLIC_ROUTES = [
   '/login',
-  '/register',
   '/forgot-password',
 ] as const
 
 export const AUTH_ROUTES = {
   login: '/login',
-  register: '/register',
   forgotPassword: '/forgot-password',
   logout: '/api/auth/logout',
   session: '/api/auth/session',
 } as const
 
 export const DASHBOARD_ROUTES = {
-  admin: '/dashboard/admin',
-  hod: '/dashboard/hod',
-  teacher: '/dashboard/teacher',
+  admin: '/admin',
+  hod: '/hod',
+  teacher: '/teacher',
 } as const
 
 export const ADMIN_ROUTES = {
-  dashboard: '/dashboard/admin',
-  users: '/dashboard/admin/users',
-  rbac: '/dashboard/admin/rbac',
-  academicYears: '/dashboard/admin/academic-years',
-  departments: '/dashboard/admin/departments',
-  programs: '/dashboard/admin/programs',
-  semesters: '/dashboard/admin/semesters',
-  courses: '/dashboard/admin/courses',
-  teachers: '/dashboard/admin/teachers',
-  surveys: '/dashboard/admin/surveys',
-  reports: '/dashboard/admin/reports',
-  attainment: '/dashboard/admin/attainment',
-  settings: '/dashboard/admin/settings',
-  auditLogs: '/dashboard/admin/audit-logs',
-  systemHealth: '/dashboard/admin/system-health',
+  dashboard: '/admin',
+  users: '/admin/users',
+  rbac: '/admin/rbac',
+  academicYears: '/admin/academic-years',
+  departments: '/admin/departments',
+  programs: '/admin/programs',
+  semesters: '/admin/semesters',
+  courses: '/admin/courses',
+  teachers: '/admin/teachers',
+  surveys: '/admin/surveys',
+  reports: '/admin/reports',
+  attainment: '/admin/attainment',
+  settings: '/admin/settings',
+  auditLogs: '/admin/audit-logs',
+  systemHealth: '/admin/system-health',
 } as const
 
 export const HOD_ROUTES = {
-  dashboard: '/dashboard/hod',
-  courses: '/dashboard/hod/courses',
-  teachers: '/dashboard/hod/teachers',
-  attainment: '/dashboard/hod/attainment',
-  cqiReview: '/dashboard/hod/cqi-review',
-  reports: '/dashboard/hod/reports',
+  dashboard: '/hod',
+  courses: '/hod/courses',
+  teachers: '/hod/teachers',
+  attainment: '/hod/attainment',
+  cqiReview: '/hod/cqi-review',
+  reports: '/hod/reports',
 } as const
 
 export const TEACHER_ROUTES = {
-  dashboard: '/dashboard/teacher',
-  courses: '/dashboard/teacher/courses',
+  dashboard: '/teacher',
+  courses: '/teacher/courses',
 } as const
 
 // Get the appropriate dashboard route based on role

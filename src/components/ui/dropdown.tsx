@@ -36,7 +36,7 @@ export default function Dropdown({ trigger, items, align = 'right' }: DropdownPr
       </div>
       {open && (
         <div
-          className={`absolute mt-1 z-50 min-w-[180px] bg-white border border-gray-200 rounded-lg shadow-lg py-1 ${
+          className={`absolute mt-1 z-50 min-w-45 bg-white border border-gray-200 rounded-lg shadow-lg py-1 ${
             align === 'right' ? 'right-0' : 'left-0'
           }`}
         >

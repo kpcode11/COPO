@@ -136,12 +136,12 @@ export default function AdminPage() {
       <div>
         <h2 className="text-sm font-semibold text-gray-900 mb-3">Quick Actions</h2>
         <div className="grid grid-cols-2 gap-3">
-          <QuickLink href="/dashboard/admin/users" icon={Users} label="Manage Users" description="Create, edit, and manage user accounts" />
-          <QuickLink href="/dashboard/admin/rbac" icon={Shield} label="Roles & Access" description="Configure roles and permissions" />
-          <QuickLink href="/dashboard/admin/departments" icon={Building2} label="Departments" description="Manage academic departments" />
-          <QuickLink href="/dashboard/admin/academic-years" icon={Calendar} label="Academic Years" description="Configure academic year periods" />
-          <QuickLink href="/dashboard/admin/audit-logs" icon={ScrollText} label="Audit Logs" description="View system activity logs" />
-          <QuickLink href="/dashboard/admin/settings" icon={Settings} label="System Settings" description="Global configuration and thresholds" />
+          <QuickLink href="/admin/users" icon={Users} label="Manage Users" description="Create, edit, and manage user accounts" />
+          <QuickLink href="/admin/rbac" icon={Shield} label="Roles & Access" description="Configure roles and permissions" />
+          <QuickLink href="/admin/departments" icon={Building2} label="Departments" description="Manage academic departments" />
+          <QuickLink href="/admin/academic-years" icon={Calendar} label="Academic Years" description="Configure academic year periods" />
+          <QuickLink href="/admin/audit-logs" icon={ScrollText} label="Audit Logs" description="View system activity logs" />
+          <QuickLink href="/admin/settings" icon={Settings} label="System Settings" description="Global configuration and thresholds" />
         </div>
       </div>
     </div>

@@ -45,7 +45,7 @@ function NavLink({
       }`}
     >
       <Icon
-        className={`h-4 w-4 flex-shrink-0 ${
+        className={`h-4 w-4 shrink-0 ${
           active ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'
         }`}
       />
@@ -67,9 +67,9 @@ function SidebarSection({ section, pathname }: { section: NavSection; pathname: 
         {section.items.map((item) => {
           const isActive =
             pathname === item.href ||
-            (item.href !== '/dashboard/admin' &&
-              item.href !== '/dashboard/hod' &&
-              item.href !== '/dashboard/teacher' &&
+            (item.href !== '/admin' &&
+              item.href !== '/hod' &&
+              item.href !== '/teacher' &&
               pathname.startsWith(item.href + '/'))
           return (
             <NavLink

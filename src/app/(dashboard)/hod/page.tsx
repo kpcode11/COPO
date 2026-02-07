@@ -115,19 +115,19 @@ export default function HodDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <Link href="/dashboard/hod/courses" className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+              <Link href="/hod/courses" className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                 <span className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-gray-400" /> View Courses</span>
                 <ArrowRight className="h-3.5 w-3.5 text-gray-300" />
               </Link>
-              <Link href="/dashboard/hod/attainment" className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+              <Link href="/hod/attainment" className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                 <span className="flex items-center gap-2"><Target className="h-4 w-4 text-gray-400" /> Attainment Report</span>
                 <ArrowRight className="h-3.5 w-3.5 text-gray-300" />
               </Link>
-              <Link href="/dashboard/hod/cqi-review" className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+              <Link href="/hod/cqi-review" className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                 <span className="flex items-center gap-2"><CheckSquare className="h-4 w-4 text-gray-400" /> CQI Review</span>
                 <ArrowRight className="h-3.5 w-3.5 text-gray-300" />
               </Link>
-              <Link href="/dashboard/hod/reports" className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+              <Link href="/hod/reports" className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                 <span className="flex items-center gap-2"><BarChart3 className="h-4 w-4 text-gray-400" /> Reports</span>
                 <ArrowRight className="h-3.5 w-3.5 text-gray-300" />
               </Link>
@@ -175,7 +175,7 @@ export default function HodDashboard() {
             </Table>
             {teachers.length > 10 && (
               <div className="px-5 py-2 border-t border-gray-100 text-center">
-                <Link href="/dashboard/hod/teachers" className="text-sm text-blue-600 hover:underline">
+                <Link href="/hod/teachers" className="text-sm text-blue-600 hover:underline">
                   View all {teachers.length} teachers
                 </Link>
               </div>

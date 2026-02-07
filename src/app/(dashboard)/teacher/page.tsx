@@ -76,7 +76,7 @@ export default function TeacherDashboard() {
           <CardContent>
             <div className="space-y-2">
               <Link
-                href="/dashboard/teacher/courses"
+                href="/teacher/courses"
                 className="flex items-center justify-between rounded-md px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <span className="flex items-center gap-2">

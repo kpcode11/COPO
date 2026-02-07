@@ -3,10 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 // Public routes that don't require authentication
 const PUBLIC_ROUTES = [
   '/login',
-  '/register',
   '/forgot-password',
   '/api/auth/login',
-  '/api/auth/register',
   '/api/auth/session',
   '/api/health',
   '/api/version',
@@ -48,11 +46,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // For dashboard role-scoped routes, validate role via session API
-  const dashboardMatch = pathname.match(/^\/dashboard\/(admin|hod|teacher)/)
+  // For role-scoped routes (/admin, /hod, /teacher), validate role via session API
+  const roleMatch = pathname.match(/^\/(admin|hod|teacher)/)
   const apiRoleMatch = pathname.match(/^\/api\/(admin)/)
 
-  if (dashboardMatch || apiRoleMatch) {
+  if (roleMatch || apiRoleMatch) {
     try {
       const sessionUrl = new URL('/api/auth/session', req.url)
       const sessionRes = await fetch(sessionUrl.toString(), {
@@ -77,7 +75,7 @@ export async function middleware(req: NextRequest) {
       }
 
       // Check role access
-      const segment = dashboardMatch?.[1] || apiRoleMatch?.[1]
+      const segment = roleMatch?.[1] || apiRoleMatch?.[1]
       if (segment) {
         const prefix = `/${segment}`
         const allowedRoles = ROLE_ROUTES[prefix]

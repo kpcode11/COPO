@@ -23,7 +23,8 @@ export async function POST(req: Request) {
     const maxAge = Math.floor((expiresAt.getTime() - Date.now()) / 1000)
 
     const res = NextResponse.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role, departmentId: user.departmentId } })
-    res.headers.append('Set-Cookie', `session=${encodeURIComponent(token)}; HttpOnly; Path=/; Max-Age=${maxAge}; SameSite=Lax; Secure`)
+    const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
+    res.headers.append('Set-Cookie', `session=${encodeURIComponent(token)}; HttpOnly; Path=/; Max-Age=${maxAge}; SameSite=Lax${secure}`)
     return res
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })

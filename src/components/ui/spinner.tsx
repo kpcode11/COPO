@@ -25,7 +25,7 @@ export default function Spinner({ size = 'md', className = '', label }: SpinnerP
 
 export function PageLoader({ label = 'Loading...' }: { label?: string }) {
   return (
-    <div className="flex items-center justify-center min-h-[200px]">
+    <div className="flex items-center justify-center min-h-50">
       <Spinner size="lg" label={label} />
     </div>
   )

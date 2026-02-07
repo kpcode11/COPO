@@ -10,7 +10,7 @@ import Card from '@/components/ui/card'
 import { PageLoader } from '@/components/ui/spinner'
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell, TableEmpty } from '@/components/ui/table'
 import ConfirmModal from '@/components/modals/confirm-modal'
-import { Users, Plus, RefreshCw, Search } from 'lucide-react'
+import { Users, Plus, RefreshCw, Search, Eye, EyeOff } from 'lucide-react'
 
 interface UserRecord {
   id: string
@@ -45,6 +45,7 @@ export default function AdminUsersPage() {
   // Create modal
   const [createOpen, setCreateOpen] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [showCreatePwd, setShowCreatePwd] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'TEACHER', departmentId: '' })
 
   // Edit modal
@@ -95,6 +96,7 @@ export default function AdminUsersPage() {
       }
       setCreateOpen(false)
       setForm({ name: '', email: '', password: '', role: 'TEACHER', departmentId: '' })
+      setShowCreatePwd(false)
       setSuccess(`User "${data.user?.name}" created successfully`)
       fetchData()
     } catch (err: any) {
@@ -313,7 +315,27 @@ export default function AdminUsersPage() {
         <div className="space-y-1">
           <Input label="Full Name" value={form.name} onChange={(v) => setForm((s) => ({ ...s, name: v }))} required placeholder="e.g. Dr. Rajesh Kumar" />
           <Input label="Email" type="email" value={form.email} onChange={(v) => setForm((s) => ({ ...s, email: v }))} required placeholder="e.g. rajesh@example.com" />
-          <Input label="Password" type="password" value={form.password} onChange={(v) => setForm((s) => ({ ...s, password: v }))} required placeholder="Min 6 characters" />
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Password *</label>
+            <div className="relative">
+              <input
+                type={showCreatePwd ? 'text' : 'password'}
+                value={form.password}
+                onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))}
+                placeholder="Min 6 characters"
+                className="w-full border border-gray-300 rounded px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowCreatePwd(!showCreatePwd)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                tabIndex={-1}
+              >
+                {showCreatePwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
           <Select
             label="Role"
             value={form.role}
