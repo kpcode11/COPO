@@ -1,167 +1,418 @@
 'use client'
-import React, { useEffect, useState } from 'react'
-import TeachersTable from '@/components/tables/teachers-table'
+import React, { useEffect, useState, useCallback } from 'react'
 import Button from '@/components/ui/button'
-import ConfirmModal from '@/components/modals/confirm-modal'
+import Badge from '@/components/ui/badge'
+import Modal from '@/components/ui/modal'
 import Input from '@/components/ui/input'
+import Select from '@/components/ui/select'
 import Alert from '@/components/ui/alert'
+import Card from '@/components/ui/card'
+import { PageLoader } from '@/components/ui/spinner'
+import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell, TableEmpty } from '@/components/ui/table'
+import ConfirmModal from '@/components/modals/confirm-modal'
+import { Users, Plus, RefreshCw, Search, Eye, EyeOff } from 'lucide-react'
+
+interface UserRecord {
+  id: string
+  name: string
+  email: string
+  role: string
+  departmentId?: string | null
+  isActive: boolean
+  createdAt: string
+}
+
+interface Department {
+  id: string
+  name: string
+}
+
+const roleMeta: Record<string, { label: string; variant: 'danger' | 'primary' | 'success' }> = {
+  ADMIN: { label: 'Admin', variant: 'danger' },
+  HOD: { label: 'HOD', variant: 'primary' },
+  TEACHER: { label: 'Teacher', variant: 'success' },
+}
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<any[]>([])
+  const [users, setUsers] = useState<UserRecord[]>([])
+  const [departments, setDepartments] = useState<Department[]>([])
   const [loading, setLoading] = useState(true)
-  const [openCreate, setOpenCreate] = useState(false)
-  const [creating, setCreating] = useState(false)
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'TEACHER', departmentId: '' })
   const [error, setError] = useState<string | null>(null)
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const [toDelete, setToDelete] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState('')
+
+  // Create modal
+  const [createOpen, setCreateOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [showCreatePwd, setShowCreatePwd] = useState(false)
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'TEACHER', departmentId: '' })
+
+  // Edit modal
   const [editOpen, setEditOpen] = useState(false)
-  const [editing, setEditing] = useState<any | null>(null)
+  const [editing, setEditing] = useState<UserRecord | null>(null)
+  const [editForm, setEditForm] = useState({ role: '', departmentId: '' })
 
-  const [departments, setDepartments] = useState<any[]>([])
+  // Delete confirm
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [toDelete, setToDelete] = useState<UserRecord | null>(null)
 
-  const fetchUsers = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
-      const res = await fetch('/api/users')
-      const data = await res.json()
-      if (res.ok && data.users) setUsers(data.users)
-      else setError(data.error || 'Failed to load users')
+      const [usersRes, deptsRes] = await Promise.all([
+        fetch('/api/users'),
+        fetch('/api/departments'),
+      ])
+      const usersData = await usersRes.json()
+      const deptsData = await deptsRes.json()
+      if (usersRes.ok) setUsers(usersData.users || [])
+      else setError(usersData.error || 'Failed to load users')
+      if (deptsRes.ok) setDepartments(deptsData.departments || [])
     } catch (err: any) {
       setError(err.message || 'Network error')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const fetchDepartments = async () => {
-    try {
-      const res = await fetch('/api/departments')
-      const data = await res.json()
-      if (res.ok && data.departments) setDepartments(data.departments)
-    } catch (err) { /* ignore */ }
-  }
-
-  useEffect(() => { fetchUsers(); fetchDepartments() }, [])
+  useEffect(() => { fetchData() }, [fetchData])
 
   const createUser = async () => {
     setCreating(true)
     setError(null)
     try {
-      const res = await fetch('/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+      const res = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
       const data = await res.json()
-      if (!res.ok) return setError(data.error || 'Create failed')
-      setOpenCreate(false)
+      if (!res.ok) {
+        setError(data.error || 'Create failed')
+        setCreating(false)
+        return
+      }
+      setCreateOpen(false)
       setForm({ name: '', email: '', password: '', role: 'TEACHER', departmentId: '' })
-      fetchUsers()
+      setShowCreatePwd(false)
+      setSuccess(`User "${data.user?.name}" created successfully`)
+      fetchData()
     } catch (err: any) {
       setError(err.message || 'Network error')
-    } finally { setCreating(false) }
-  }
-
-  const confirmDelete = (id: string) => { setToDelete(id); setConfirmOpen(true) }
-  const doDelete = async () => {
-    if (!toDelete) return setConfirmOpen(false)
-    try {
-      const res = await fetch(`/api/users/${toDelete}`, { method: 'DELETE' })
-      const data = await res.json()
-      if (!res.ok) return setError(data.error || 'Delete failed')
-      setConfirmOpen(false)
-      setToDelete(null)
-      fetchUsers()
-    } catch (err: any) {
-      setError(err.message || 'Network error')
+    } finally {
+      setCreating(false)
     }
   }
 
-  const openEdit = (user: any) => {
+  const openEdit = (user: UserRecord) => {
     setEditing(user)
+    setEditForm({ role: user.role, departmentId: user.departmentId || '' })
     setEditOpen(true)
+    setSuccess(null)
   }
 
   const saveEdit = async () => {
     if (!editing) return
     setError(null)
     try {
-      const res = await fetch(`/api/users/${editing.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role: editing.role, departmentId: editing.departmentId }) })
+      const res = await fetch(`/api/users/${editing.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm),
+      })
       const data = await res.json()
-      if (!res.ok) return setError(data.error || 'Update failed')
+      if (!res.ok) {
+        setError(data.error || 'Update failed')
+        return
+      }
       setEditOpen(false)
       setEditing(null)
-      fetchUsers()
+      setSuccess(`User "${editing.name}" updated successfully`)
+      fetchData()
     } catch (err: any) {
       setError(err.message || 'Network error')
     }
   }
 
+  const confirmDelete = (user: UserRecord) => {
+    setToDelete(user)
+    setConfirmOpen(true)
+    setSuccess(null)
+  }
+
+  const doDelete = async () => {
+    if (!toDelete) return
+    try {
+      const res = await fetch(`/api/users/${toDelete.id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Delete failed')
+        setConfirmOpen(false)
+        return
+      }
+      setConfirmOpen(false)
+      setSuccess(`User "${toDelete.name}" has been deactivated`)
+      setToDelete(null)
+      fetchData()
+    } catch (err: any) {
+      setError(err.message || 'Network error')
+    }
+  }
+
+  const filteredUsers = users.filter((u) => {
+    const matchesSearch =
+      !search ||
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase())
+    const matchesRole = !roleFilter || u.role === roleFilter
+    return matchesSearch && matchesRole
+  })
+
+  const getDeptName = (deptId?: string | null) => {
+    if (!deptId) return '—'
+    return departments.find((d) => d.id === deptId)?.name || '—'
+  }
+
+  if (loading) return <PageLoader label="Loading users…" />
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-semibold">Users</h1>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <Users className="h-5 w-5 text-blue-600" />
+            User Management
+          </h1>
+          <p className="mt-1 text-sm text-gray-500">Create, edit, and manage user accounts across the system.</p>
+        </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => fetchUsers()}>Refresh</Button>
-          <Button variant="primary" onClick={() => setOpenCreate(true)}>Create user</Button>
+          <Button variant="outline" onClick={fetchData}>
+            <RefreshCw className="h-4 w-4 mr-1.5" />
+            Refresh
+          </Button>
+          <Button variant="primary" onClick={() => { setCreateOpen(true); setSuccess(null) }}>
+            <Plus className="h-4 w-4 mr-1.5" />
+            Create User
+          </Button>
         </div>
       </div>
 
       {error && <Alert type="error">{error}</Alert>}
+      {success && <Alert type="success">{success}</Alert>}
 
-      {loading ? <div>Loading...</div> : <TeachersTable teachers={users} onEdit={openEdit} onDelete={confirmDelete} />}
+      {/* Filters */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by name or email…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-md border border-gray-300 pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+          />
+        </div>
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value)}
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+        >
+          <option value="">All roles</option>
+          <option value="ADMIN">Admin</option>
+          <option value="HOD">HOD</option>
+          <option value="TEACHER">Teacher</option>
+        </select>
+        <div className="text-sm text-gray-500">
+          {filteredUsers.length} of {users.length} users
+        </div>
+      </div>
 
-      {openCreate && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white p-6 rounded w-full max-w-md">
-            <h3 className="text-lg mb-3">Create user</h3>
-            <Input label="Name" value={form.name} onChange={(v) => setForm((s) => ({ ...s, name: v }))} required />
-            <Input label="Email" value={form.email} onChange={(v) => setForm((s) => ({ ...s, email: v }))} required />
-            <Input label="Password" type="password" value={form.password} onChange={(v) => setForm((s) => ({ ...s, password: v }))} required />
-            <div className="mt-2">
-              <label className="block text-sm mb-1">Role</label>
-              <select value={form.role} onChange={(e) => setForm((s) => ({ ...s, role: e.target.value }))} className="w-full border p-2 rounded">
-                <option value="ADMIN">ADMIN</option>
-                <option value="HOD">HOD</option>
-                <option value="TEACHER">TEACHER</option>
-              </select>
-            </div>
-            <div className="mt-2">
-              <label className="block text-sm mb-1">Department</label>
-              <select value={form.departmentId} onChange={(e) => setForm((s) => ({ ...s, departmentId: e.target.value }))} className="w-full border p-2 rounded">
-                <option value="">(none)</option>
-                {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
-            </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <Button variant="secondary" onClick={() => setOpenCreate(false)}>Cancel</Button>
-              <Button variant="primary" onClick={() => createUser()} disabled={creating}>{creating ? 'Creating...' : 'Create'}</Button>
+      {/* Table */}
+      <Card padding={false}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableHeader>Name</TableHeader>
+              <TableHeader>Email</TableHeader>
+              <TableHeader>Role</TableHeader>
+              <TableHeader>Department</TableHeader>
+              <TableHeader>Status</TableHeader>
+              <TableHeader>Joined</TableHeader>
+              <TableHeader className="text-right">Actions</TableHeader>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredUsers.length === 0 ? (
+              <TableEmpty columns={7} message="No users match your filters" />
+            ) : (
+              filteredUsers.map((user) => {
+                const meta = roleMeta[user.role]
+                return (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-600">
+                          {user.name.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="font-medium text-gray-900">{user.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      <Badge variant={meta?.variant || 'default'} dot>
+                        {meta?.label || user.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{getDeptName(user.departmentId)}</TableCell>
+                    <TableCell>
+                      <Badge variant={user.isActive ? 'success' : 'default'}>
+                        {user.isActive ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(user.createdAt).toLocaleDateString('en-IN', {
+                        day: 'numeric', month: 'short', year: 'numeric',
+                      })}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button variant="outline" className="text-xs px-2.5 py-1" onClick={() => openEdit(user)}>
+                          Edit
+                        </Button>
+                        {user.isActive && (
+                          <Button variant="ghost" className="text-xs px-2.5 py-1 text-red-600 hover:bg-red-50" onClick={() => confirmDelete(user)}>
+                            Deactivate
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
+            )}
+          </TableBody>
+        </Table>
+      </Card>
+
+      {/* Create User Modal */}
+      <Modal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title="Create New User"
+        description="Add a new user to the system with a role and optional department assignment."
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button variant="primary" onClick={createUser} disabled={creating}>
+              {creating ? 'Creating…' : 'Create User'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-1">
+          <Input label="Full Name" value={form.name} onChange={(v) => setForm((s) => ({ ...s, name: v }))} required placeholder="e.g. Dr. Rajesh Kumar" />
+          <Input label="Email" type="email" value={form.email} onChange={(v) => setForm((s) => ({ ...s, email: v }))} required placeholder="e.g. rajesh@example.com" />
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Password *</label>
+            <div className="relative">
+              <input
+                type={showCreatePwd ? 'text' : 'password'}
+                value={form.password}
+                onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))}
+                placeholder="Min 6 characters"
+                className="w-full border border-gray-300 rounded px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowCreatePwd(!showCreatePwd)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                tabIndex={-1}
+              >
+                {showCreatePwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
           </div>
+          <Select
+            label="Role"
+            value={form.role}
+            onChange={(v) => setForm((s) => ({ ...s, role: v }))}
+            options={[
+              { value: 'ADMIN', label: 'Administrator' },
+              { value: 'HOD', label: 'Head of Department' },
+              { value: 'TEACHER', label: 'Teacher' },
+            ]}
+          />
+          {(form.role === 'HOD' || form.role === 'TEACHER') && (
+            <Select
+              label="Department"
+              value={form.departmentId}
+              onChange={(v) => setForm((s) => ({ ...s, departmentId: v }))}
+              placeholder="Select department…"
+              options={departments.map((d) => ({ value: d.id, label: d.name }))}
+            />
+          )}
         </div>
-      )}
+      </Modal>
 
-      {editOpen && editing && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white p-6 rounded w-full max-w-md">
-            <h3 className="text-lg mb-3">Edit user</h3>
-            <div className="mb-2"><strong>Name:</strong> {editing.name}</div>
-            <div className="mb-2"><strong>Email:</strong> {editing.email}</div>
-            <div className="mb-2">
-              <label className="block text-sm mb-1">Role</label>
-              <select value={editing.role} onChange={(e) => setEditing((s: any) => ({ ...s, role: e.target.value }))} className="w-full border p-2 rounded">
-                <option value="ADMIN">ADMIN</option>
-                <option value="HOD">HOD</option>
-                <option value="TEACHER">TEACHER</option>
-              </select>
+      {/* Edit User Modal */}
+      <Modal
+        open={editOpen}
+        onClose={() => { setEditOpen(false); setEditing(null) }}
+        title="Edit User"
+        description={editing ? `Update role and department for ${editing.name}` : ''}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => { setEditOpen(false); setEditing(null) }}>Cancel</Button>
+            <Button variant="primary" onClick={saveEdit}>Save Changes</Button>
+          </>
+        }
+      >
+        {editing && (
+          <div className="space-y-1">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 mb-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white border text-gray-600 text-sm font-medium">
+                {editing.name.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div className="text-sm font-medium text-gray-900">{editing.name}</div>
+                <div className="text-xs text-gray-500">{editing.email}</div>
+              </div>
             </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <Button variant="secondary" onClick={() => { setEditOpen(false); setEditing(null) }}>Cancel</Button>
-              <Button variant="primary" onClick={() => saveEdit()}>Save</Button>
-            </div>
+            <Select
+              label="Role"
+              value={editForm.role}
+              onChange={(v) => setEditForm((s) => ({ ...s, role: v }))}
+              options={[
+                { value: 'ADMIN', label: 'Administrator' },
+                { value: 'HOD', label: 'Head of Department' },
+                { value: 'TEACHER', label: 'Teacher' },
+              ]}
+            />
+            {(editForm.role === 'HOD' || editForm.role === 'TEACHER') && (
+              <Select
+                label="Department"
+                value={editForm.departmentId}
+                onChange={(v) => setEditForm((s) => ({ ...s, departmentId: v }))}
+                placeholder="Select department…"
+                options={departments.map((d) => ({ value: d.id, label: d.name }))}
+              />
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
 
-      <ConfirmModal open={confirmOpen} title="Delete user" onConfirm={doDelete} onCancel={() => setConfirmOpen(false)}>
-        Are you sure you want to deactivate this user?
+      {/* Delete Confirm */}
+      <ConfirmModal
+        open={confirmOpen}
+        title="Deactivate User"
+        onConfirm={doDelete}
+        onCancel={() => { setConfirmOpen(false); setToDelete(null) }}
+      >
+        Are you sure you want to deactivate <strong>{toDelete?.name}</strong>? They will not be able to log in until reactivated by an administrator.
       </ConfirmModal>
     </div>
   )

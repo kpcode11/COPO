@@ -1,5 +1,5 @@
-import React from 'react';
+import { redirect } from 'next/navigation'
 
 export default function HomePage() {
-  return <div>Welcome to COPO (placeholder)</div>;
+  redirect('/login')
 }

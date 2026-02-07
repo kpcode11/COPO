@@ -1,6 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { LogOut } from 'lucide-react'
 
 export default function SignOutButton({ className }: { className?: string }) {
   const [loading, setLoading] = useState(false)
@@ -10,10 +11,8 @@ export default function SignOutButton({ className }: { className?: string }) {
     setLoading(true)
     try {
       await fetch('/api/auth/logout', { method: 'POST' })
-      // best-effort: navigate to login after clearing session
       router.push('/login')
-    } catch (err) {
-      // ignore and redirect anyway
+    } catch {
       router.push('/login')
     } finally {
       setLoading(false)
@@ -21,8 +20,16 @@ export default function SignOutButton({ className }: { className?: string }) {
   }
 
   return (
-    <button onClick={signOut} className={className || 'bg-red-600 text-white px-3 py-1 rounded'} disabled={loading}>
-      {loading ? 'Signing out...' : 'Sign out'}
+    <button
+      onClick={signOut}
+      disabled={loading}
+      className={
+        className ||
+        'flex w-full items-center justify-center gap-2 rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors'
+      }
+    >
+      <LogOut className="h-3.5 w-3.5" />
+      {loading ? 'Signing out…' : 'Sign out'}
     </button>
   )
 }
