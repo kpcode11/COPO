@@ -10,12 +10,13 @@ import Card from '@/components/ui/card'
 import { PageLoader } from '@/components/ui/spinner'
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell, TableEmpty } from '@/components/ui/table'
 import ConfirmModal from '@/components/modals/confirm-modal'
-import { BookMarked, Plus, RefreshCw, Pencil, Trash2, Search } from 'lucide-react'
+import { BookMarked, Plus, RefreshCw, Pencil, Trash2, Search, UserPlus } from 'lucide-react'
 
 interface AcademicYear { id: string; name: string; isActive: boolean }
 interface Semester { id: string; number: number; type: string; academicYear: AcademicYear }
 interface Department { id: string; name: string }
 interface Program { id: string; name: string; departmentId: string }
+interface Teacher { id: string; name: string; email: string; departmentId: string | null }
 interface Course {
   id: string
   code: string
@@ -61,6 +62,13 @@ export default function AdminCoursesPage() {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [toDelete, setToDelete] = useState<Course | null>(null)
 
+  // Assign teacher
+  const [teachers, setTeachers] = useState<Teacher[]>([])
+  const [assignOpen, setAssignOpen] = useState(false)
+  const [assignCourse, setAssignCourse] = useState<Course | null>(null)
+  const [assignTeacherId, setAssignTeacherId] = useState('')
+  const [assigning, setAssigning] = useState(false)
+
   const fetchData = useCallback(async () => {
     setLoading(true)
     setError(null)
@@ -71,18 +79,20 @@ export default function AdminCoursesPage() {
       if (deptFilter) params.set('departmentId', deptFilter)
       if (progFilter) params.set('programId', progFilter)
 
-      const [courseRes, ayRes, semRes, deptRes, progRes] = await Promise.all([
+      const [courseRes, ayRes, semRes, deptRes, progRes, teacherRes] = await Promise.all([
         fetch(`/api/admin/courses?${params.toString()}`),
         fetch('/api/admin/academic-years'),
         fetch('/api/admin/semesters'),
         fetch('/api/admin/departments'),
         fetch('/api/admin/programs'),
+        fetch('/api/admin/teachers'),
       ])
       const courseData = await courseRes.json()
       const ayData = await ayRes.json()
       const semData = await semRes.json()
       const deptData = await deptRes.json()
       const progData = await progRes.json()
+      const teacherData = await teacherRes.json()
 
       if (courseRes.ok) setCourses(courseData.courses || [])
       else setError(courseData.error || 'Failed to load courses')
@@ -90,6 +100,7 @@ export default function AdminCoursesPage() {
       if (semRes.ok) setSemesters(semData.semesters || [])
       if (deptRes.ok) setDepartments(deptData.departments || [])
       if (progRes.ok) setPrograms(progData.programs || [])
+      if (teacherRes.ok) setTeachers(teacherData.teachers || [])
     } catch (err: any) {
       setError(err.message || 'Network error')
     } finally {
@@ -172,6 +183,36 @@ export default function AdminCoursesPage() {
       fetchData()
     } catch (err: any) {
       setError(err.message || 'Network error')
+    }
+  }
+
+  const openAssign = (course: Course) => {
+    setAssignCourse(course)
+    setAssignTeacherId('')
+    setAssignOpen(true)
+    setSuccess(null)
+  }
+
+  const handleAssign = async () => {
+    if (!assignCourse || !assignTeacherId) return
+    setAssigning(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/admin/courses/${assignCourse.id}/assign-teacher`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teacherId: assignTeacherId }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Assign failed')
+      setAssignOpen(false)
+      setAssignCourse(null)
+      setSuccess(`Teacher assigned to "${assignCourse.code}" successfully`)
+      fetchData()
+    } catch (err: any) {
+      setError(err.message || 'Network error')
+    } finally {
+      setAssigning(false)
     }
   }
 
@@ -286,6 +327,9 @@ export default function AdminCoursesPage() {
                   <TableCell>{course.program.name}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1.5">
+                      <Button variant="outline" className="text-xs px-2.5 py-1" onClick={() => openAssign(course)}>
+                        <UserPlus className="h-3.5 w-3.5 mr-1" /> Assign
+                      </Button>
                       <Button variant="outline" className="text-xs px-2.5 py-1" onClick={() => openEdit(course)}>
                         <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
                       </Button>
@@ -417,6 +461,39 @@ export default function AdminCoursesPage() {
           </span>
         )}
       </ConfirmModal>
+
+      {/* Assign Teacher Modal */}
+      <Modal
+        open={assignOpen}
+        onClose={() => { setAssignOpen(false); setAssignCourse(null) }}
+        title="Assign Teacher to Course"
+        description={assignCourse ? `Assigning a teacher to ${assignCourse.code} – ${assignCourse.name}` : ''}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => { setAssignOpen(false); setAssignCourse(null) }}>Cancel</Button>
+            <Button variant="primary" onClick={handleAssign} disabled={assigning || !assignTeacherId}>
+              {assigning ? 'Assigning…' : 'Assign Teacher'}
+            </Button>
+          </>
+        }
+      >
+        <Select
+          label="Teacher"
+          value={assignTeacherId}
+          onChange={setAssignTeacherId}
+          placeholder="Select a teacher…"
+          required
+          options={teachers
+            .filter(t => !assignCourse?.departmentId || t.departmentId === assignCourse.departmentId || !t.departmentId)
+            .map(t => ({ value: t.id, label: `${t.name} (${t.email})` }))}
+        />
+        {assignCourse && (
+          <p className="text-xs text-gray-500 mt-1">
+            Showing teachers from the {departments.find(d => d.id === assignCourse.departmentId)?.name || 'same'} department.
+            Currently {assignCourse._count.teachers} teacher(s) assigned.
+          </p>
+        )}
+      </Modal>
     </div>
   )
 }

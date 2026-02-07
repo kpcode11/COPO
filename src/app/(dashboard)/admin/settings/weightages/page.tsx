@@ -1,5 +1,5 @@
-import React from 'react';
+import { redirect } from 'next/navigation'
 
 export default function WeightagesPage() {
-  return <div>Weightages (placeholder)</div>;
+  redirect('/admin/settings')
 }

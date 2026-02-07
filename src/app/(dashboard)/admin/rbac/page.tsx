@@ -9,7 +9,7 @@ import Alert from '@/components/ui/alert'
 import Tabs from '@/components/ui/tabs'
 import { PageLoader } from '@/components/ui/spinner'
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell, TableEmpty } from '@/components/ui/table'
-import { Shield, Users, Eye, ChevronRight } from 'lucide-react'
+import { Shield, Users, Eye, ChevronRight, Edit, Save, X } from 'lucide-react'
 import { getPermissionsForRole, type Permission } from '@/lib/auth/rbac'
 
 interface UserRecord {
@@ -82,19 +82,30 @@ export default function AdminRBACPage() {
   // Permission viewer
   const [viewRole, setViewRole] = useState<string | null>(null)
 
+  // Permission editing
+  const [editingPerms, setEditingPerms] = useState(false)
+  const [editingRole, setEditingRole] = useState<string | null>(null)
+  const [selectedPerms, setSelectedPerms] = useState<Record<string, string[]>>({})
+  const [savingPerms, setSavingPerms] = useState(false)
+
   const fetchData = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const [usersRes, deptsRes] = await Promise.all([
+      const [usersRes, deptsRes, permsRes] = await Promise.all([
         fetch('/api/users'),
         fetch('/api/departments'),
+        fetch('/api/admin/role-permissions'),
       ])
       const usersData = await usersRes.json()
       const deptsData = await deptsRes.json()
+      const permsData = await permsRes.json()
       if (usersRes.ok) setUsers(usersData.users || [])
       else setError(usersData.error || 'Failed to load users')
       if (deptsRes.ok) setDepartments(deptsData.departments || [])
+      if (permsRes.ok) {
+        setSelectedPerms(permsData.permissions || {})
+      }
     } catch (err: any) {
       setError(err.message || 'Network error')
     } finally {
@@ -168,6 +179,61 @@ export default function AdminRBACPage() {
       fetchData()
     } catch (err: any) {
       setError(err.message || 'Network error')
+    }
+  }
+
+  const startEditingPerms = (role: string) => {
+    setEditingRole(role)
+    setEditingPerms(true)
+    setSuccess(null)
+    setError(null)
+  }
+
+  const cancelEditingPerms = () => {
+    setEditingPerms(false)
+    setEditingRole(null)
+    fetchData() // Reset to server state
+  }
+
+  const togglePermission = (role: string, perm: string) => {
+    setSelectedPerms((prev) => {
+      const rolePerms = prev[role] || []
+      const has = rolePerms.includes(perm)
+      if (has) {
+        return { ...prev, [role]: rolePerms.filter((p) => p !== perm) }
+      } else {
+        return { ...prev, [role]: [...rolePerms, perm] }
+      }
+    })
+  }
+
+  const savePermissions = async () => {
+    if (!editingRole) return
+    setSavingPerms(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/admin/role-permissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: editingRole,
+          permissions: selectedPerms[editingRole] || [],
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to save permissions')
+        setSavingPerms(false)
+        return
+      }
+      setSuccess(`Permissions updated for ${roleMeta[editingRole]?.label || editingRole}`)
+      setEditingPerms(false)
+      setEditingRole(null)
+      fetchData()
+    } catch (err: any) {
+      setError(err.message || 'Network error')
+    } finally {
+      setSavingPerms(false)
     }
   }
 
@@ -365,47 +431,90 @@ export default function AdminRBACPage() {
             const grouped = groupPermissions(allPerms)
 
             return (
-              <Card padding={false}>
-                <div className="px-5 py-3 border-b border-gray-100">
-                  <span className="text-sm font-medium text-gray-700">Permission matrix across roles</span>
-                </div>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableHeader>Permission</TableHeader>
-                      {ROLES.map((r) => (
-                        <TableHeader key={r} className="text-center">{roleMeta[r].label}</TableHeader>
-                      ))}
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {Object.entries(grouped).map(([domain, actions]) =>
-                      actions.map((action, i) => {
-                        const perm = `${domain}.${action}` as Permission
-                        return (
-                          <TableRow key={perm}>
-                            <TableCell>
-                              <PermissionBadge domain={domain} action={action} />
-                            </TableCell>
-                            {ROLES.map((role) => {
-                              const has = getPermissionsForRole(role).includes(perm)
-                              return (
-                                <TableCell key={role} className="text-center">
-                                  {has ? (
-                                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-xs">✓</span>
-                                  ) : (
-                                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gray-100 text-gray-300 text-xs">—</span>
-                                  )}
-                                </TableCell>
-                              )
-                            })}
-                          </TableRow>
-                        )
-                      })
+              <div className="space-y-4">
+                {editingPerms && editingRole && (
+                  <Alert type="info">
+                    <div className="flex items-center justify-between">
+                      <span>Editing permissions for <strong>{roleMeta[editingRole]?.label}</strong>. Click checkboxes to toggle permissions.</span>
+                      <div className="flex gap-2">
+                        <Button variant="secondary" onClick={cancelEditingPerms} className="text-xs" disabled={savingPerms}>
+                          <X className="h-3.5 w-3.5 mr-1" />
+                          Cancel
+                        </Button>
+                        <Button variant="primary" onClick={savePermissions} className="text-xs" disabled={savingPerms}>
+                          <Save className="h-3.5 w-3.5 mr-1" />
+                          {savingPerms ? 'Saving…' : 'Save Changes'}
+                        </Button>
+                      </div>
+                    </div>
+                  </Alert>
+                )}
+                
+                <Card padding={false}>
+                  <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Permission matrix across roles</span>
+                    {!editingPerms && (
+                      <div className="flex gap-2">
+                        {ROLES.map((role) => (
+                          <Button
+                            key={role}
+                            variant="outline"
+                            className="text-xs"
+                            onClick={() => startEditingPerms(role)}
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Edit {roleMeta[role].label}
+                          </Button>
+                        ))}
+                      </div>
                     )}
-                  </TableBody>
-                </Table>
-              </Card>
+                  </div>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableHeader>Permission</TableHeader>
+                        {ROLES.map((r) => (
+                          <TableHeader key={r} className="text-center">{roleMeta[r].label}</TableHeader>
+                        ))}
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {Object.entries(grouped).map(([domain, actions]) =>
+                        actions.map((action, i) => {
+                          const perm = `${domain}.${action}` as Permission
+                          return (
+                            <TableRow key={perm}>
+                              <TableCell>
+                                <PermissionBadge domain={domain} action={action} />
+                              </TableCell>
+                              {ROLES.map((role) => {
+                                const has = (selectedPerms[role] || getPermissionsForRole(role)).includes(perm)
+                                const isEditing = editingPerms && editingRole === role
+                                return (
+                                  <TableCell key={role} className="text-center">
+                                    {isEditing ? (
+                                      <input
+                                        type="checkbox"
+                                        checked={has}
+                                        onChange={() => togglePermission(role, perm)}
+                                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                      />
+                                    ) : has ? (
+                                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-xs">✓</span>
+                                    ) : (
+                                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gray-100 text-gray-300 text-xs">—</span>
+                                    )}
+                                  </TableCell>
+                                )
+                              })}
+                            </TableRow>
+                          )
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                </Card>
+              </div>
             )
           }
 

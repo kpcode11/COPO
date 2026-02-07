@@ -10,7 +10,7 @@ import Card from '@/components/ui/card'
 import { PageLoader } from '@/components/ui/spinner'
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell, TableEmpty } from '@/components/ui/table'
 import ConfirmModal from '@/components/modals/confirm-modal'
-import { Users, Plus, RefreshCw, Search, Eye, EyeOff } from 'lucide-react'
+import { Users, Plus, RefreshCw, Search, Eye, EyeOff, Key, Copy, CheckCircle } from 'lucide-react'
 
 interface UserRecord {
   id: string
@@ -56,6 +56,13 @@ export default function AdminUsersPage() {
   // Delete confirm
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [toDelete, setToDelete] = useState<UserRecord | null>(null)
+
+  // Password reset modal
+  const [resetPwdOpen, setResetPwdOpen] = useState(false)
+  const [resettingPwd, setResettingPwd] = useState(false)
+  const [resetPassword, setResetPassword] = useState<string | null>(null)
+  const [resetUser, setResetUser] = useState<UserRecord | null>(null)
+  const [passwordCopied, setPasswordCopied] = useState(false)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -158,6 +165,71 @@ export default function AdminUsersPage() {
       fetchData()
     } catch (err: any) {
       setError(err.message || 'Network error')
+    }
+  }
+
+  const reactivateUser = async (user: UserRecord) => {
+    setError(null)
+    try {
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: true }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Reactivation failed')
+        return
+      }
+      setSuccess(`User "${user.name}" has been reactivated`)
+      fetchData()
+    } catch (err: any) {
+      setError(err.message || 'Network error')
+    }
+  }
+
+  const openResetPassword = (user: UserRecord) => {
+    setResetUser(user)
+    setResetPwdOpen(true)
+    setResetPassword(null)
+    setPasswordCopied(false)
+    setSuccess(null)
+    setError(null)
+  }
+
+  const doResetPassword = async () => {
+    if (!resetUser) return
+    setResettingPwd(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/users/${resetUser.id}/reset-password`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Password reset failed')
+        setResettingPwd(false)
+        return
+      }
+      setResetPassword(data.password)
+      setSuccess(`Password reset for "${resetUser.name}"`)
+    } catch (err: any) {
+      setError(err.message || 'Network error')
+    } finally {
+      setResettingPwd(false)
+    }
+  }
+
+  const closeResetModal = () => {
+    setResetPwdOpen(false)
+    setResetPassword(null)
+    setResetUser(null)
+    setPasswordCopied(false)
+  }
+
+  const copyPassword = () => {
+    if (resetPassword) {
+      navigator.clipboard.writeText(resetPassword)
+      setPasswordCopied(true)
+      setTimeout(() => setPasswordCopied(false), 2000)
     }
   }
 
@@ -282,9 +354,17 @@ export default function AdminUsersPage() {
                         <Button variant="outline" className="text-xs px-2.5 py-1" onClick={() => openEdit(user)}>
                           Edit
                         </Button>
-                        {user.isActive && (
+                        <Button variant="outline" className="text-xs px-2.5 py-1" onClick={() => openResetPassword(user)}>
+                          <Key className="h-3 w-3 mr-1" />
+                          Reset Pwd
+                        </Button>
+                        {user.isActive ? (
                           <Button variant="ghost" className="text-xs px-2.5 py-1 text-red-600 hover:bg-red-50" onClick={() => confirmDelete(user)}>
                             Deactivate
+                          </Button>
+                        ) : (
+                          <Button variant="ghost" className="text-xs px-2.5 py-1 text-green-600 hover:bg-green-50" onClick={() => reactivateUser(user)}>
+                            Reactivate
                           </Button>
                         )}
                       </div>
@@ -414,6 +494,75 @@ export default function AdminUsersPage() {
       >
         Are you sure you want to deactivate <strong>{toDelete?.name}</strong>? They will not be able to log in until reactivated by an administrator.
       </ConfirmModal>
+
+      {/* Password Reset Modal */}
+      <Modal
+        open={resetPwdOpen}
+        onClose={closeResetModal}
+        title="Reset User Password"
+        description={resetUser ? `Generate a new password for ${resetUser.name}` : ''}
+        footer={
+          resetPassword ? (
+            <Button variant="primary" onClick={closeResetModal}>Done</Button>
+          ) : (
+            <>
+              <Button variant="secondary" onClick={closeResetModal}>Cancel</Button>
+              <Button variant="primary" onClick={doResetPassword} disabled={resettingPwd}>
+                {resettingPwd ? 'Generating…' : 'Reset Password'}
+              </Button>
+            </>
+          )
+        }
+      >
+        {resetPassword ? (
+          <div className="space-y-3">
+            <Alert type="success">Password reset successfully!</Alert>
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <div className="text-sm font-medium text-gray-700 mb-2">New Password</div>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 px-3 py-2 bg-white rounded border text-sm font-mono select-all">
+                  {resetPassword}
+                </code>
+                <Button
+                  variant={passwordCopied ? 'primary' : 'outline'}
+                  onClick={copyPassword}
+                  className="text-xs px-3 py-2"
+                >
+                  {passwordCopied ? (
+                    <>
+                      <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5 mr-1" />
+                      Copy
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-gray-600 mt-2">
+                Make sure to copy this password and share it securely with the user. It won't be shown again.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 text-sm font-medium">
+                {resetUser?.name.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div className="text-sm font-medium text-gray-900">{resetUser?.name}</div>
+                <div className="text-xs text-gray-500">{resetUser?.email}</div>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600">
+              A new random password will be generated and the user's current password will be replaced. The new password will be displayed after generation.
+            </p>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
