@@ -30,7 +30,7 @@ export async function PATCH(req: Request, context: any) {
     const body = await req.json()
     const parsed = updateOutcomeSchema.parse(body)
 
-    const updated = await prisma.courseOutcome.update({ where: { id: outcomeId }, data: { description: parsed.description ?? co.description, bloomLevel: parsed.bloomLevel ?? co.bloomLevel } })
+    const updated = await prisma.courseOutcome.update({ where: { id: outcomeId }, data: { description: parsed.description ?? co.description, bloomLevels: parsed.bloomLevels ?? co.bloomLevels } })
 
     await createAudit(me.id, 'UPDATE_COURSE_OUTCOME', 'CourseOutcome', outcomeId, `Updated CO ${co.code} for course ${co.courseId}`)
 

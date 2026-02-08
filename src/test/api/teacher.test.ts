@@ -126,7 +126,7 @@ describe('POST /api/teacher/courses/[courseId]/outcomes', () => {
     mockPrisma.courseOutcome.findFirst.mockResolvedValue(null)
     mockPrisma.courseOutcome.create.mockResolvedValue({ ...MOCK_COURSE_OUTCOME, id: 'co-new' })
     const req = jsonRequest('http://localhost/api/teacher/courses/course-1/outcomes', {
-      code: 'CO1', description: 'Understand DS', bloomLevel: 'L2',
+      code: 'CO1', description: 'Understand DS', bloomLevels: ['Understand'],
     })
     const ctx = mockContext({ courseId: 'course-1' })
     const res = await createOutcome(req, ctx)
@@ -139,7 +139,7 @@ describe('POST /api/teacher/courses/[courseId]/outcomes', () => {
     mockPrisma.courseTeacher.findFirst.mockResolvedValue(MOCK_ASSIGNMENT)
     mockPrisma.courseOutcome.findFirst.mockResolvedValue(MOCK_COURSE_OUTCOME)
     const req = jsonRequest('http://localhost/api/teacher/courses/course-1/outcomes', {
-      code: 'CO1', description: 'X', bloomLevel: 'L2',
+      code: 'CO1', description: 'X', bloomLevels: ['Understand'],
     })
     const ctx = mockContext({ courseId: 'course-1' })
     const res = await createOutcome(req, ctx)
@@ -150,7 +150,7 @@ describe('POST /api/teacher/courses/[courseId]/outcomes', () => {
     asTeacher()
     mockPrisma.course.findUnique.mockResolvedValue(MOCK_COURSE_LOCKED)
     const req = jsonRequest('http://localhost/api/teacher/courses/course-1/outcomes', {
-      code: 'CO2', description: 'Y', bloomLevel: 'L3',
+      code: 'CO2', description: 'Y', bloomLevels: ['Apply'],
     })
     const ctx = mockContext({ courseId: 'course-1' })
     const res = await createOutcome(req, ctx)

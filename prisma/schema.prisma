@@ -99,7 +99,7 @@ model CourseOutcome {
   id           String               @id @default(cuid())
   code         String
   description  String
-  bloomLevel   String
+  bloomLevels  String[]
   courseId     String
   questions    AssessmentQuestion[]
   attainment   COAttainment?

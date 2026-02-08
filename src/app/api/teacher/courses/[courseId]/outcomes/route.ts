@@ -31,7 +31,7 @@ export async function POST(req: Request, context: any) {
     const existing = await prisma.courseOutcome.findFirst({ where: { courseId, code: parsed.code } })
     if (existing) return NextResponse.json({ error: 'CO code already exists for this course' }, { status: 400 })
 
-    const co = await prisma.courseOutcome.create({ data: { code: parsed.code, description: parsed.description, bloomLevel: parsed.bloomLevel, courseId } })
+    const co = await prisma.courseOutcome.create({ data: { code: parsed.code, description: parsed.description, bloomLevels: parsed.bloomLevels, courseId } })
 
     await createAudit(me.id, 'CREATE_COURSE_OUTCOME', 'CourseOutcome', co.id, `Created CO ${co.code} for course ${courseId}`)
 

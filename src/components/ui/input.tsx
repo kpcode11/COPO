@@ -9,10 +9,11 @@ type Props = {
   placeholder?: string
   error?: string | null
   required?: boolean
+  disabled?: boolean
   onChange?: (v: string) => void
 }
 
-export default function Input({ id, label, type = 'text', value = '', placeholder, error = null, required = false, onChange }: Props) {
+export default function Input({ id, label, type = 'text', value = '', placeholder, error = null, required = false, disabled = false, onChange }: Props) {
   // Use React's useId to generate a stable id that matches between server and client
   const reactId = React.useId()
   const inputId = id || `input-${reactId.replaceAll(':','')}`
@@ -25,8 +26,9 @@ export default function Input({ id, label, type = 'text', value = '', placeholde
         type={type}
         value={value}
         placeholder={placeholder}
+        disabled={disabled}
         onChange={(e) => onChange && onChange(e.target.value)}
-        className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200 ${error ? 'border-red-400' : 'border-gray-300'}`}
+        className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200 ${error ? 'border-red-400' : 'border-gray-300'} ${disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
         aria-invalid={!!error}
         aria-describedby={error ? `${inputId}-error` : undefined}
       />

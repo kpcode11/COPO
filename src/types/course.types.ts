@@ -4,7 +4,7 @@ export interface CourseOutcome {
   id: string
   code: string
   description: string
-  bloomLevel: string
+  bloomLevels: string[]
   courseId: string
 }
 
