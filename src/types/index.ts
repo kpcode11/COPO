@@ -2,3 +2,6 @@ export type { Role, SessionUser, Session, LoginRequest, LoginResponse, RegisterR
 export type { AcademicYear, Semester, Department, Program, Course } from './academic.types'
 export type { AttainmentLevel, COAttainment, POAttainment } from './attainment.types'
 export type { CourseOutcome, CoPoMapping, Assessment, AssessmentQuestion } from './course.types'
+export type { StudentMarkRecord, MarksUploadResult, MarksValidationError, MarksPreviewRow, MarksValidationResult, MarksUploadInfo } from './marks.types'
+export type { COSurveyAggregate, CourseSurveyUpload } from './survey.types'
+export type { CqiStatus, CQIAction, CourseProgress, CourseOverview } from './report.types'

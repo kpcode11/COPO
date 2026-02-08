@@ -1,5 +1,9 @@
-import React from 'react';
+'use client'
+import { useParams } from 'next/navigation'
+import { redirect } from 'next/navigation'
 
 export default function AssessmentPage() {
-  return <div>Assessment Detail (placeholder)</div>;
+  const params = useParams()
+  const courseId = params.courseId as string
+  redirect(`/teacher/courses/${courseId}/assessments`)
 }

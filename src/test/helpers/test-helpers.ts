@@ -79,7 +79,7 @@ export const MOCK_COURSE_OUTCOME = {
   id: 'co-1',
   code: 'CO1',
   description: 'Understand data structures',
-  bloomLevel: 'L2',
+  bloomLevels: ['Understand'],
   courseId: 'course-1',
 }
 
