@@ -35,7 +35,7 @@ export default function LoginPage() {
         </div>
         <div className="space-y-4">
           <h1 className="text-3xl font-bold leading-tight">
-            Course Outcome &<br />Program Outcome<br />Attainment System
+            Course Outcome &amp;<br />Program Outcome<br />Attainment System
           </h1>
           <p className="text-blue-100 text-sm leading-relaxed max-w-sm">
             Streamline CO-PO mapping, attainment calculation, and academic quality improvement across departments.
@@ -52,7 +52,7 @@ export default function LoginPage() {
           {/* Mobile branding */}
           <div className="lg:hidden flex items-center gap-2 mb-8">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
-              <GraduationCap className="h-4.5 w-4.5" />
+              <GraduationCap className="h-5 w-5" />
             </div>
             <span className="text-lg font-semibold text-gray-900">COPO</span>
           </div>
