@@ -20,6 +20,7 @@ model User {
   createdAt    DateTime        @default(now())
   teaching     CourseTeacher[]
   sessions     Session[]
+  auditLogs    AuditLog[]      @relation("AuditLogs")
   department   Department?     @relation(fields: [departmentId], references: [id])
 }
 
@@ -301,6 +302,7 @@ model AuditLog {
   userId    String
   details   String?
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], name: "AuditLogs")
 }
 
 enum Role {
