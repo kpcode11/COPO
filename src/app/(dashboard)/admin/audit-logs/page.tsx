@@ -54,7 +54,7 @@ export default function AuditLogsPage() {
 
   const exportCSV = () => {
     if (!logs || logs.length === 0) return
-    const header = ['action', 'entity', 'entityId', 'userId', 'details', 'createdAt']
+    const header = ['action', 'entity', 'userId', 'details', 'createdAt']
     const rows = logs.map((r) => header.map((h) => JSON.stringify((r as any)[h] ?? '')))
     const csv = [header.join(','), ...rows.map((r) => r.join(','))].join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
