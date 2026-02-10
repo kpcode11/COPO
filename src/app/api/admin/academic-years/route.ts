@@ -13,7 +13,8 @@ export async function GET(req: Request) {
       include: { semesters: { orderBy: { number: 'asc' } } },
       orderBy: { name: 'desc' },
     })
-    return NextResponse.json({ academicYears: years })
+    const sanitized = years.map((y) => ({ ...y, createdAt: y.createdAt?.toISOString() }))
+    return NextResponse.json({ academicYears: sanitized })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })
   }
@@ -42,7 +43,8 @@ export async function POST(req: Request) {
 
     await createAudit(me.id, 'CREATE_ACADEMIC_YEAR', 'AcademicYear', year.id, `Created academic year ${year.name}`)
 
-    return NextResponse.json({ academicYear: year }, { status: 201 })
+    const sanitized = { ...year, createdAt: year.createdAt?.toISOString() }
+    return NextResponse.json({ academicYear: sanitized }, { status: 201 })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })
   }

@@ -39,6 +39,7 @@ model AcademicYear {
   id        String     @id @default(cuid())
   name      String     @unique
   isActive  Boolean    @default(false)
+  createdAt DateTime   @default(now())
   semesters Semester[]
 }
 

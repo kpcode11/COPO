@@ -11,16 +11,10 @@ import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell, TableEmp
 import ConfirmModal from '@/components/modals/confirm-modal'
 import { CalendarDays, Plus, RefreshCw, Pencil, Trash2 } from 'lucide-react'
 
-interface AcademicYear {
-  id: string
-  name: string
-  isActive: boolean
-  createdAt: string
-  semesters: { id: string; number: number; type: string; isLocked: boolean }[]
-}
+import type { AcademicYear as AcademicYearType } from '@/types/academic.types'
 
 export default function AcademicYearsPage() {
-  const [years, setYears] = useState<AcademicYear[]>([])
+  const [years, setYears] = useState<AcademicYearType[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -32,12 +26,12 @@ export default function AcademicYearsPage() {
 
   // Edit modal
   const [editOpen, setEditOpen] = useState(false)
-  const [editing, setEditing] = useState<AcademicYear | null>(null)
+  const [editing, setEditing] = useState<AcademicYearType | null>(null)
   const [editForm, setEditForm] = useState({ name: '', isActive: false })
 
   // Delete confirm
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const [toDelete, setToDelete] = useState<AcademicYear | null>(null)
+  const [toDelete, setToDelete] = useState<AcademicYearType | null>(null)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -78,7 +72,7 @@ export default function AcademicYearsPage() {
     }
   }
 
-  const openEdit = (year: AcademicYear) => {
+  const openEdit = (year: AcademicYearType) => {
     setEditing(year)
     setEditForm({ name: year.name, isActive: year.isActive })
     setEditOpen(true)
@@ -105,7 +99,7 @@ export default function AcademicYearsPage() {
     }
   }
 
-  const confirmDelete = (year: AcademicYear) => {
+  const confirmDelete = (year: AcademicYearType) => {
     setToDelete(year)
     setConfirmOpen(true)
     setSuccess(null)
@@ -180,10 +174,10 @@ export default function AcademicYearsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {year.semesters.length === 0 ? (
+                      {(year.semesters?.length ?? 0) === 0 ? (
                         <span className="text-gray-400 text-xs">No semesters</span>
                       ) : (
-                        year.semesters.map((s) => (
+                        year.semesters?.map((s) => (
                           <Badge key={s.id} variant={s.isLocked ? 'warning' : 'info'}>
                             Sem {s.number} ({s.type}){s.isLocked ? ' 🔒' : ''}
                           </Badge>
@@ -192,9 +186,9 @@ export default function AcademicYearsPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {new Date(year.createdAt).toLocaleDateString('en-IN', {
+                    {year.createdAt ? new Date(year.createdAt).toLocaleDateString('en-IN', {
                       day: 'numeric', month: 'short', year: 'numeric',
-                    })}
+                    }) : '—'}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1.5">
@@ -307,9 +301,9 @@ export default function AcademicYearsPage() {
         onCancel={() => { setConfirmOpen(false); setToDelete(null) }}
       >
         Are you sure you want to delete <strong>{toDelete?.name}</strong>?
-        {toDelete && toDelete.semesters.length > 0 && (
+        {toDelete && (toDelete.semesters?.length ?? 0) > 0 && (
           <span className="block mt-1 text-amber-600">
-            This will also delete {toDelete.semesters.length} semester(s) associated with it.
+            This will also delete {toDelete.semesters?.length} semester(s) associated with it.
           </span>
         )}
       </ConfirmModal>
