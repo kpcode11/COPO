@@ -80,7 +80,7 @@ export default function LoginForm() {
 
       {/* Password */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between">
           <label htmlFor="login-password" className="block text-sm font-medium text-gray-700">
             Password
           </label>
@@ -90,7 +90,7 @@ export default function LoginForm() {
           >
             Forgot password?
           </Link>
-        </div>
+        </div> */}
         <div className="relative">
           <input
             id="login-password"
@@ -132,7 +132,7 @@ export default function LoginForm() {
         Sign in
       </Button>
 
-      <p className="text-center text-sm text-gray-500">
+      {/* <p className="text-center text-sm text-gray-500">
         {"Don't have an account? "}
         <Link
           href="/register"
@@ -140,7 +140,7 @@ export default function LoginForm() {
         >
           Register
         </Link>
-      </p>
+      </p> */}
     </form>
   )
 }

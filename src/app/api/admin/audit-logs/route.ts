@@ -32,7 +32,13 @@ export async function GET(req: Request) {
     }
 
     const total = await prisma.auditLog.count({ where })
-    const logs = await prisma.auditLog.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * perPage, take: perPage })
+    const logs = await prisma.auditLog.findMany({ 
+      where, 
+      include: { user: { select: { id: true, name: true, email: true, role: true } } },
+      orderBy: { createdAt: 'desc' }, 
+      skip: (page - 1) * perPage, 
+      take: perPage 
+    })
 
     return NextResponse.json({ page, perPage, total, logs })
   } catch (err: any) {

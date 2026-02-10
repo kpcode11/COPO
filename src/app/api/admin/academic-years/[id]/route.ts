@@ -15,7 +15,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       include: { semesters: { orderBy: { number: 'asc' } } },
     })
     if (!year) return NextResponse.json({ error: 'Academic year not found' }, { status: 404 })
-    return NextResponse.json({ academicYear: year })
+    const sanitized = { ...year, createdAt: year.createdAt?.toISOString() }
+    return NextResponse.json({ academicYear: sanitized })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })
   }
@@ -51,7 +52,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     await createAudit(me.id, 'UPDATE_ACADEMIC_YEAR', 'AcademicYear', year.id, `Updated academic year ${year.name}`)
 
-    return NextResponse.json({ academicYear: year })
+    const sanitized = { ...year, createdAt: year.createdAt?.toISOString() }
+    return NextResponse.json({ academicYear: sanitized })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })
   }

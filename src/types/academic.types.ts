@@ -4,6 +4,7 @@ export interface AcademicYear {
   id: string
   name: string
   isActive: boolean
+  createdAt?: string
   semesters?: Semester[]
 }
 
