@@ -30,7 +30,18 @@ export async function GET(req: Request) {
       where.id = { in: courseIds }
     }
 
-    const courses = await prisma.course.findMany({ where, include: { department: true, program: true, semester: true } })
+    const courses = await prisma.course.findMany({ 
+      where, 
+      include: { 
+        department: true, 
+        program: true, 
+        semester: {
+          include: {
+            academicYear: true
+          }
+        }
+      } 
+    })
     return NextResponse.json({ courses })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })

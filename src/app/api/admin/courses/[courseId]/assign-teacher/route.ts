@@ -43,3 +43,35 @@ export async function POST(req: Request, context: any) {
     return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })
   }
 }
+
+export async function DELETE(req: Request, context: any) {
+  try {
+    const ctx: any = context;
+    let params = ctx.params;
+    if (params instanceof Promise) params = await params;
+    const me = await getCurrentUser(req)
+    if (!me || (me.role !== 'ADMIN' && me.role !== 'HOD')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    const { courseId } = params
+    const body = await req.json()
+    const parsed = assignTeacherSchema.parse(body)
+
+    const course = await prisma.course.findUnique({ where: { id: courseId } })
+    if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 })
+
+    // HOD can only unassign teachers from courses in their department
+    if (me.role === 'HOD' && me.departmentId && me.departmentId !== course.departmentId) {
+      return NextResponse.json({ error: 'HOD can only unassign teachers from courses in their department' }, { status: 403 })
+    }
+
+    const assignment = await prisma.courseTeacher.findFirst({ where: { courseId, teacherId: parsed.teacherId } })
+    if (!assignment) return NextResponse.json({ error: 'Teacher not assigned to this course' }, { status: 404 })
+
+    await prisma.courseTeacher.delete({ where: { id: assignment.id } })
+    await createAudit(me.id, 'UNASSIGN_TEACHER', 'CourseTeacher', assignment.id, `Unassigned teacher ${parsed.teacherId} from course ${courseId}`)
+
+    return NextResponse.json({ success: true })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Bad request' }, { status: 400 })
+  }
+}

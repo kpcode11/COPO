@@ -10,7 +10,7 @@ import Card from '@/components/ui/card'
 import { PageLoader } from '@/components/ui/spinner'
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell, TableEmpty } from '@/components/ui/table'
 import ConfirmModal from '@/components/modals/confirm-modal'
-import { GraduationCap, Plus, RefreshCw, Search, Copy, CheckCircle } from 'lucide-react'
+import { GraduationCap, Plus, RefreshCw, Search, Copy, CheckCircle, BookOpen, X } from 'lucide-react'
 
 interface TeacherRecord {
   id: string
@@ -23,6 +23,25 @@ interface TeacherRecord {
 interface Department {
   id: string
   name: string
+}
+
+interface Course {
+  id: string
+  code: string
+  name: string
+  departmentId: string
+  programId: string
+  semester: {
+    id: string
+    number: number
+    academicYear?: {
+      name: string
+    }
+  }
+}
+
+interface AssignedCourse extends Course {
+  assignmentId?: string
 }
 
 export default function AdminTeachersPage() {
@@ -49,6 +68,15 @@ export default function AdminTeachersPage() {
   // Delete confirm
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [toDelete, setToDelete] = useState<TeacherRecord | null>(null)
+
+  // Assign courses modal
+  const [assignCoursesOpen, setAssignCoursesOpen] = useState(false)
+  const [assigningTeacher, setAssigningTeacher] = useState<TeacherRecord | null>(null)
+  const [courses, setCourses] = useState<Course[]>([])
+  const [assignedCourses, setAssignedCourses] = useState<Course[]>([])
+  const [loadingCourses, setLoadingCourses] = useState(false)
+  const [assigningCourse, setAssigningCourse] = useState(false)
+  const [courseSearch, setCourseSearch] = useState('')
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -196,6 +224,114 @@ export default function AdminTeachersPage() {
     return departments.find((d) => d.id === deptId)?.name || '—'
   }
 
+  const openAssignCourses = async (teacher: TeacherRecord) => {
+    setAssigningTeacher(teacher)
+    setAssignCoursesOpen(true)
+    setSuccess(null)
+    setError(null)
+    setCourseSearch('')
+    setLoadingCourses(true)
+    
+    try {
+      const [coursesRes, teacherCoursesRes] = await Promise.all([
+        fetch('/api/courses'),
+        fetch('/api/admin/teachers/' + teacher.id + '/courses'),
+      ])
+      
+      const coursesData = await coursesRes.json()
+      const teacherCoursesData = await teacherCoursesRes.json()
+      
+      if (coursesRes.ok) setCourses(coursesData.courses || [])
+      if (teacherCoursesRes.ok) setAssignedCourses(teacherCoursesData.courses || [])
+    } catch (err: any) {
+      setError(err.message || 'Failed to load courses')
+    } finally {
+      setLoadingCourses(false)
+    }
+  }
+
+  const assignCourse = async (courseId: string) => {
+    if (!assigningTeacher) return
+    setAssigningCourse(true)
+    setError(null)
+    
+    try {
+      const res = await fetch(`/api/admin/courses/${courseId}/assign-teacher`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teacherId: assigningTeacher.id }),
+      })
+      
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to assign course')
+        return
+      }
+      
+      // Refresh assigned courses
+      const teacherCoursesRes = await fetch('/api/admin/teachers/' + assigningTeacher.id + '/courses')
+      const teacherCoursesData = await teacherCoursesRes.json()
+      if (teacherCoursesRes.ok) setAssignedCourses(teacherCoursesData.courses || [])
+      
+      setSuccess('Course assigned successfully')
+    } catch (err: any) {
+      setError(err.message || 'Network error')
+    } finally {
+      setAssigningCourse(false)
+    }
+  }
+
+  const unassignCourse = async (courseId: string) => {
+    if (!assigningTeacher) return
+    setAssigningCourse(true)
+    setError(null)
+    
+    try {
+      const res = await fetch(`/api/admin/courses/${courseId}/assign-teacher`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teacherId: assigningTeacher.id }),
+      })
+      
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to unassign course')
+        return
+      }
+      
+      // Refresh assigned courses
+      const teacherCoursesRes = await fetch('/api/admin/teachers/' + assigningTeacher.id + '/courses')
+      const teacherCoursesData = await teacherCoursesRes.json()
+      if (teacherCoursesRes.ok) setAssignedCourses(teacherCoursesData.courses || [])
+      
+      setSuccess('Course unassigned successfully')
+    } catch (err: any) {
+      setError(err.message || 'Network error')
+    } finally {
+      setAssigningCourse(false)
+    }
+  }
+
+  const closeAssignCoursesModal = () => {
+    setAssignCoursesOpen(false)
+    setAssigningTeacher(null)
+    setCourses([])
+    setAssignedCourses([])
+    setCourseSearch('')
+  }
+
+  const isAssigned = (courseId: string) => {
+    return assignedCourses.some((c) => c.id === courseId)
+  }
+
+  const filteredCourses = courses.filter((c) => {
+    const matchesSearch =
+      !courseSearch ||
+      c.code.toLowerCase().includes(courseSearch.toLowerCase()) ||
+      c.name.toLowerCase().includes(courseSearch.toLowerCase())
+    return matchesSearch
+  })
+
   if (loading) return <PageLoader label="Loading teachers…" />
 
   return (
@@ -286,6 +422,10 @@ export default function AdminTeachersPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1.5">
+                      <Button variant="outline" className="text-xs px-2.5 py-1" onClick={() => openAssignCourses(teacher)}>
+                        <BookOpen className="h-3 w-3 mr-1" />
+                        Courses
+                      </Button>
                       <Button variant="outline" className="text-xs px-2.5 py-1" onClick={() => openEdit(teacher)}>
                         Edit
                       </Button>
@@ -436,6 +576,107 @@ export default function AdminTeachersPage() {
       >
         Are you sure you want to deactivate <strong>{toDelete?.name}</strong>? They will not be able to log in until reactivated by an administrator.
       </ConfirmModal>
+
+      {/* Assign Courses Modal */}
+      <Modal
+        open={assignCoursesOpen}
+        onClose={closeAssignCoursesModal}
+        title="Assign Courses"
+        description={assigningTeacher ? `Manage course assignments for ${assigningTeacher.name}` : ''}
+        size="xl"
+        footer={
+          <Button variant="primary" onClick={closeAssignCoursesModal}>Done</Button>
+        }
+      >
+        {assigningTeacher && (
+          <div className="space-y-4">
+            {/* Teacher Info */}
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600 text-sm font-medium">
+                {assigningTeacher.name.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div className="text-sm font-medium text-gray-900">{assigningTeacher.name}</div>
+                <div className="text-xs text-gray-500">{assigningTeacher.email}</div>
+              </div>
+            </div>
+
+            {/* Assigned Courses */}
+            {assignedCourses.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 mb-2">Assigned Courses ({assignedCourses.length})</h3>
+                <div className="space-y-1.5">
+                  {assignedCourses.map((course) => (
+                    <div key={course.id} className="flex items-center justify-between p-2.5 rounded-lg border border-gray-200 bg-white">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-900">{course.code} - {course.name}</div>
+                        <div className="text-xs text-gray-500">
+                          Semester {course.semester.number}{course.semester.academicYear ? ` • ${course.semester.academicYear.name}` : ''}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        className="text-xs px-2 py-1 text-red-600 hover:bg-red-50"
+                        onClick={() => unassignCourse(course.id)}
+                        disabled={assigningCourse}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Available Courses */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-900">Available Courses</h3>
+                <div className="relative w-64">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search courses..."
+                    value={courseSearch}
+                    onChange={(e) => setCourseSearch(e.target.value)}
+                    className="w-full rounded-md border border-gray-300 pl-8 pr-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  />
+                </div>
+              </div>
+              
+              {loadingCourses ? (
+                <div className="p-4 text-center text-sm text-gray-500">Loading courses...</div>
+              ) : (
+                <div className="max-h-64 overflow-y-auto space-y-1.5">
+                  {filteredCourses.filter((c) => !isAssigned(c.id)).map((course) => (
+                    <div key={course.id} className="flex items-center justify-between p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-900">{course.code} - {course.name}</div>
+                        <div className="text-xs text-gray-500">
+                          Semester {course.semester.number}{course.semester.academicYear ? ` • ${course.semester.academicYear.name}` : ''}
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="text-xs px-2.5 py-1"
+                        onClick={() => assignCourse(course.id)}
+                        disabled={assigningCourse}
+                      >
+                        Assign
+                      </Button>
+                    </div>
+                  ))}
+                  {filteredCourses.filter((c) => !isAssigned(c.id)).length === 0 && (
+                    <div className="p-4 text-center text-sm text-gray-500">
+                      {courseSearch ? 'No matching courses found' : 'All courses have been assigned'}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
