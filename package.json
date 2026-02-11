@@ -4,7 +4,7 @@
   "description": "CO-PO Attainment System for NBA Accreditation",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && next build --no-turbopack",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
