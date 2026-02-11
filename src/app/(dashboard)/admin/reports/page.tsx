@@ -300,13 +300,14 @@ export default function AdminReportsPage() {
                                 <TableCell className="text-sm">{po.description}</TableCell>
                                 <TableCell className="font-mono text-sm">{po.attainment?.directScore?.toFixed(2) ?? '—'}</TableCell>
                                 <TableCell className="font-mono text-sm">{po.attainment?.indirectScore?.toFixed(2) ?? '—'}</TableCell>
-                                <TableCell className="font-mono text-sm font-semibold">{po.attainment?.finalScore?.toFixed(2) ?? '—'}</TableCell>
+                                <TableCell className="font-mono text-sm font-semibold">{po.attainment?.finalScore != null ? po.attainment.finalScore.toFixed(2) : '—'}</TableCell>
                                 <TableCell>
-                                  <Badge variant={getAttainmentBadgeVariant(
-                                    po.attainment?.finalScore >= 2.5 ? 3 : po.attainment?.finalScore >= 1.5 ? 1 : 0
-                                  )}>
-                                    {po.attainment?.finalScore !== null ? (po.attainment.finalScore >= 2.5 ? 'Achieved' : 'Not Achieved') : 'N/A'}
-                                  </Badge>
+                                  {(() => {
+                                    const final = po.attainment?.finalScore
+                                    const variant = final != null ? (final >= 2.5 ? 3 : final >= 1.5 ? 1 : 0) : 0
+                                    const label = final != null ? (final >= 2.5 ? 'Achieved' : 'Not Achieved') : 'N/A'
+                                    return <Badge variant={getAttainmentBadgeVariant(variant)}>{label}</Badge>
+                                  })()}
                                 </TableCell>
                               </TableRow>
                             ))

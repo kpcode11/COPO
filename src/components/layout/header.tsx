@@ -31,7 +31,7 @@ export default function Header() {
         </h1>
       </div>
 
-      {/* <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3">
         {loading ? (
           <div className="h-8 w-32 animate-pulse rounded-md bg-gray-100" />
         ) : user ? (
@@ -57,7 +57,7 @@ export default function Header() {
             />
           </>
         ) : null}
-      </div> */}
+      </div>
     </header>
   )
 }
