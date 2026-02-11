@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "AcademicYear" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+-- AlterTable
+ALTER TABLE "CourseOutcome" ALTER COLUMN "bloomLevels" DROP DEFAULT;
