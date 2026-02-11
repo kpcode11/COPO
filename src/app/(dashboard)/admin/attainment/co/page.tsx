@@ -100,9 +100,11 @@ export default function AdminCoAttainmentPage() {
     window.open(`/api/reports/export/excel?type=course&courseId=${selectedCourse}`, '_blank')
   }
 
-  const levelValue = (lvl: string | null): number => {
-    if (!lvl) return 0
-    return parseInt(lvl.replace('LEVEL_', '')) || 0
+  const levelValue = (lvl: any): number => {
+    if (lvl === null || lvl === undefined) return 0
+    const s = String(lvl)
+    const m = s.match(/\d+/)
+    return m ? parseInt(m[0], 10) : 0
   }
 
   if (loading) return <PageLoader />

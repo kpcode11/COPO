@@ -127,60 +127,6 @@ export default function Sidebar() {
       </div>
 
       {/* User section */}
-      <div className="border-t border-gray-100 p-3">
-        {loading ? (
-          <div className="h-12 animate-pulse rounded-md bg-gray-100" />
-        ) : user ? (
-          <div className="space-y-2">
-            {/* User info */}
-            <div className="flex items-center gap-3 rounded-md px-2 py-1.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600">
-                <User className="h-4 w-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {user.name}
-                </p>
-                <div className="flex items-center gap-1.5">
-                  <RoleBadge role={user.role} />
-                </div>
-              </div>
-            </div>
-
-            {/* Quick links */}
-            <div className="flex flex-col gap-0.5">
-              <Link
-                href="/profile"
-                className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors ${
-                  pathname === '/profile' ? 'bg-gray-50 text-gray-900' : ''
-                }`}
-              >
-                <User className="h-3.5 w-3.5" />
-                Profile
-              </Link>
-              <Link
-                href="/change-password"
-                className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors ${
-                  pathname === '/change-password' ? 'bg-gray-50 text-gray-900' : ''
-                }`}
-              >
-                <KeyRound className="h-3.5 w-3.5" />
-                Change Password
-              </Link>
-            </div>
-
-            {/* Sign out */}
-            <SignOutButton className="flex w-full items-center justify-center gap-2 rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors" />
-          </div>
-        ) : (
-          <Link
-            href="/login"
-            className="flex items-center justify-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-          >
-            Sign in
-          </Link>
-        )}
-      </div>
     </aside>
   )
 }

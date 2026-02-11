@@ -45,7 +45,14 @@ export async function validateMarksUpload(
   const questions = await prisma.assessmentQuestion.findMany({ where: { assessmentId } })
   if (questions.length === 0) return { error: 'No questions defined for this assessment. Define question mappings first.' }
 
-  const result = await validateMarksRows(assessmentId, headers, rows)
+  // Ensure rows are plain objects (strip prototypes/methods) so they can be passed to Server Functions
+  const plainRows = (rows || []).map((r: any) => {
+    const out: Record<string, any> = {}
+    for (const k of Object.keys(r || {})) out[k] = (r as any)[k]
+    return out
+  })
+
+  const result = await validateMarksRows(assessmentId, headers, plainRows)
   return result
 }
 
@@ -66,7 +73,14 @@ export async function uploadMarks(
   if (!assessment) return { error: 'Assessment not found for this course' }
 
   // Validate first
-  const validation = await validateMarksRows(assessmentId, headers, rows)
+  // Ensure rows are plain objects (strip prototypes/methods) so they can be passed to Server Functions
+  const plainRows = (rows || []).map((r: any) => {
+    const out: Record<string, any> = {}
+    for (const k of Object.keys(r || {})) out[k] = (r as any)[k]
+    return out
+  })
+
+  const validation = await validateMarksRows(assessmentId, headers, plainRows)
   if (!validation.valid) {
     return { error: 'Validation failed', errors: validation.errors, summary: validation.summary }
   }
@@ -95,13 +109,13 @@ export async function uploadMarks(
         assessmentId,
         fileName,
         uploadedBy: user.id,
-        recordCount: rows.length,
+        recordCount: plainRows.length,
       },
     })
 
     // Insert student marks
     const marksData: { rollNo: string; marks: number; questionId: string; marksUploadId: string }[] = []
-    for (const row of rows) {
+    for (const row of plainRows) {
       const rollNo = row[headers[0]]?.toString().trim() || ''
       if (!rollNo) continue
 
@@ -130,7 +144,7 @@ export async function uploadMarks(
     return upload
   })
 
-  await createAudit(user.id, 'UPLOAD', 'StudentMark', result.id, `Uploaded ${rows.length} student marks for assessment ${assessment.type} in course ${courseId}`)
+  await createAudit(user.id, 'UPLOAD', 'StudentMark', result.id, `Uploaded ${plainRows.length} student marks for assessment ${assessment.type} in course ${courseId}`)
 
   // Trigger attainment calculation
   try {
@@ -139,7 +153,7 @@ export async function uploadMarks(
     // Non-blocking: attainment calculation errors shouldn't fail the upload
   }
 
-  return { success: true, uploadId: result.id, recordCount: rows.length }
+  return { success: true, uploadId: result.id, recordCount: plainRows.length }
 }
 
 export async function getMarksUploadInfo(courseId: string, assessmentId: string) {

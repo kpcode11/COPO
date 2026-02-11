@@ -63,10 +63,18 @@ export default function AssessmentMarksPage() {
     await pickFile(f)
   }
 
+  // Ensure we pass plain objects (no prototypes/methods) to Server Functions
+  const sanitizeRows = (rows: any[]) => (rows || []).map((r: any) => {
+    const out: Record<string, any> = {}
+    for (const k of Object.keys(r || {})) out[k] = r[k]
+    return out
+  })
+
   // After file is parsed, validate
   useEffect(() => {
     if (headers.length > 0 && rows.length > 0 && !fileError) {
-      validateMarksUpload(courseId, assessmentId, headers, rows).then(res => {
+      const plain = sanitizeRows(rows)
+      validateMarksUpload(courseId, assessmentId, headers, plain).then(res => {
         setValidationResult(res)
         setStep('preview')
       })
@@ -77,7 +85,8 @@ export default function AssessmentMarksPage() {
     if (!file) return
     setUploading(true)
     try {
-      const res = await uploadMarks(courseId, assessmentId, file.name, headers, rows)
+      const plain = sanitizeRows(rows)
+      const res = await uploadMarks(courseId, assessmentId, file.name, headers, plain)
       if ('error' in res) {
         setToast({ message: res.error as string, type: 'error' })
         return
